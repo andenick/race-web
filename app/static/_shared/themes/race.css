@@ -1,0 +1,6 @@
+/* DuBois (race.heterodata.org) accent — oxblood/crimson, evoking W.E.B. Du Bois's
+   1900 Paris Exposition data-portrait palette. Two-line accent per ASK convention. */
+:root {
+  --ark-accent: #8b1a1a;       /* oxblood */
+  --ark-accent-soft: #f3d7d7;  /* soft tint for backgrounds/badges */
+}

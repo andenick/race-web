@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Code &amp; Reproducibility — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Code &amp; Reproducibility</h1>
+  <p class="lede">The series on this site are built by 11 loaders and 6 processors on
+     public sources (Census ACS, Fed SCF, BLS CPS, BJS, MeasuringWorth, SlaveVoyages).
+     This page documents where every figure comes from, and what does and does not ship
+     with the site.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>What ships here.</strong> This repository is the
+     website: a FastAPI application, its templates, and the finished CSVs it serves
+     from <code>app/data/</code>. The loaders and processors described below belong to
+     a separate upstream construction project and are <em>not</em> distributed with the
+     site &mdash; there is no <code>L##</code>, <code>P##</code> or <code>V##</code>
+     script in this tree, no dependency lockfile pinning the source vintages, and no
+     build stamp. You cannot re-run the construction from what is published here. What
+     you can do is audit the output: every CSV is downloadable, and every series names
+     the public source and table it was drawn from.</p>
+</section>
+
+<section class="prose">
+  <h2>How the data are built</h2>
+  <p>Upstream, the dataset is organized as three layers of plain Python. Each layer has
+     a single responsibility, and each stage's output feeds the next:</p>
+  <table class="ark-table">
+    <thead>
+      <tr><th>Layer</th><th>Role</th><th>What it does</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Loaders</strong> <code>L##</code></td>
+        <td>Fetch raw data</td>
+        <td>One loader per public source. Each calls a public API (or reads a public
+            download) and caches the raw response with a date stamp. Loaders do no math
+            &mdash; they fetch faithfully and stop. L10 is the exception: its source is a
+            printed historical volume, so its five rows were OCR-extracted from the page
+            and hand-checked rather than fetched.</td>
+      </tr>
+      <tr>
+        <td><strong>Processors</strong> <code>P##</code></td>
+        <td>Harmonize &amp; derive</td>
+        <td>Take raw loader output, harmonize race categories across sources, deflate
+            nominal to real dollars, and compute derived series (ratios, gaps, shares).
+            Every formula is documented in code so a reviewer can verify it.</td>
+      </tr>
+      <tr>
+        <td><strong>Library</strong></td>
+        <td>Synthesize &amp; validate</td>
+        <td>Aggregators assemble the cross-panel synthesis; validators
+            (<code>V##</code>) cross-check series against independent sources and assert
+            internal consistency before any file is published.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="prose">
+  <h2>Loaders &mdash; one per public source</h2>
+  <p>Each loader documents the exact public endpoint and series/table it reads:</p>
+  <table class="ark-table">
+    <thead>
+      <tr><th>Loader</th><th>Public source</th><th>Fetches</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>L01</code></td><td>Federal Reserve &mdash; Survey of Consumer Finances</td><td>Weighted median &amp; mean net worth by race (12 triennial waves)</td></tr>
+      <tr><td><code>L02</code></td><td>US Census &mdash; ACS (B19013, B17001)</td><td>Median household income &amp; poverty status by race-iteration</td></tr>
+      <tr><td><code>L03</code></td><td>BLS &mdash; Current Population Survey (via FRED)</td><td>Unemployment rate by race (monthly SA &rarr; annual average)</td></tr>
+      <tr><td><code>L05</code></td><td>US Census &mdash; ACS (B25003)</td><td>Tenure / homeownership by race-iteration</td></tr>
+      <tr><td><code>L06</code></td><td>US Census &mdash; ACS (C15002)</td><td>Bachelor's+ attainment by race-iteration</td></tr>
+      <tr><td><code>L08</code></td><td>Bureau of Justice Statistics</td><td>Imprisonment rate per 100,000 by race (<em>Prisoners in 2020</em>)</td></tr>
+      <tr><td><code>L09</code></td><td>US Census &mdash; Annual Business Survey</td><td>Employer firms by owner race (Company Summary)</td></tr>
+      <tr><td><code>L10</code></td><td>HSUS &mdash; bicentennial census series</td><td>Total US population as enumerated, 5 benchmark years only (1790, 1820, 1830, 1850, 1880) &mdash; an OCR-extracted high-confidence subset, hand-checked, and <em>not</em> disaggregated by race. Used to cross-check the L11 backbone.</td></tr>
+      <tr><td><code>L11</code></td><td>MeasuringWorth (Williamson)</td><td>Annual total US population 1790&ndash;2024 (backbone)</td></tr>
+      <tr><td><code>L12</code> / <code>L12a</code></td><td>US Census ACS / SlaveVoyages</td><td>ACS race shares; Trans-Atlantic Slave Trade Database (TAST 2019)</td></tr>
+      <tr><td><code>L13</code></td><td>US Census &mdash; ACS (B19013A/B)</td><td>Median income by race by metro (2022 cross-section)</td></tr>
+    </tbody>
+  </table>
+  <p class="note">Loader IDs are inherited from the upstream project's own numbering
+     and are not consecutive: <code>L04</code> and <code>L07</code> have no row because
+     no series published on this site draws on them. The eleven rows above are the
+     complete set of sources behind every figure here &mdash; nothing is fetched from a
+     source that is not listed.</p>
+</section>
+
+<section class="prose">
+  <h2>Processors &amp; validation</h2>
+  <p>Processors (<code>P01</code> wealth timeseries, <code>P02</code> income &amp;
+     poverty, <code>P03</code> employment, <code>P05</code> housing,
+     <code>P06</code> education, <code>P10</code> demographics) transform raw loader
+     output into the harmonized, race-consistent series published here. Cross-source
+     validation runs in that upstream pipeline, not on this site. Its result is recorded
+     in the <code>validation</code> field of <code>series_registry.json</code>, which
+     reports <code>V10</code> (demographics) 7/7 and <code>V_ALL</code> (consolidated)
+     16/16 passing across wealth, employment, income, poverty, housing, criminal justice
+     and the slave trade. No validator, log or report artifact ships in this repository,
+     so treat that line as the pipeline's own record rather than something you can
+     re-run here.</p>
+</section>
+
+<section class="prose">
+  <h2>Data not advocacy</h2>
+  <p>The pipeline's only job is faithful reconstruction. It does not smooth or
+     interpolate, and it fills no gap with a fabricated value &mdash; every data gap is
+     documented, never hidden. Where an original source publishes imputed estimates it
+     is said so and the figure is carried through as published: the trans-Atlantic
+     slave-trade series is the case that matters, since SlaveVoyages reports embarked
+     and disembarked counts as TAST imputed totals correcting for incomplete voyage
+     records. Those imputations are the source's, labelled as such, not ours.
+     For the full provenance of each figure (source vintage, race-category
+     harmonization, known limits), see
+     <a href="/methodology">Methodology &amp; Provenance</a>.</p>
+</section>
+{% endblock %}

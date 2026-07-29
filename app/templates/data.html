@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Data — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Data</h1>
+  <p class="lede">Every series behind the figures on this site, as machine-readable
+     CSV — reconstructed from authoritative public sources. Download any file, or grab
+     the data dictionary and citation record alongside the data.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>What's here:</strong> {{ files | length }} files &mdash;
+     {{ n_csv - 1 }} data CSVs plus the data dictionary and the citation record. Most
+     are race-disaggregated: wealth, income, employment, poverty, housing, education,
+     criminal justice, business ownership and metro income. The rest are the series
+     they are measured against &mdash; the total-population backbone, its cross-check
+     against the historical census, and the three trans-Atlantic slave-trade files.</p>
+  <p class="status-note">Every value traces to a named public source, recorded in one
+     of two places: <code>data_dictionary.csv</code> carries column-level provenance
+     for 12 of the {{ n_csv - 1 }} data CSVs, and <code>series_registry.json</code>
+     documents the other eight &mdash; homeownership, imprisonment, business ownership,
+     metro income, the three slave-trade files and the 2022 wealth-gap summary.
+     Nothing here is fabricated or interpolated by us: where a year is missing it stays
+     missing. Where an original source publishes imputed estimates &mdash; SlaveVoyages
+     reports its embarked and disembarked counts as TAST imputed totals, correcting for
+     voyages with incomplete records &mdash; we say so and carry the figure through as
+     published.</p>
+</section>
+
+<section class="prose">
+  <h2>Downloadable datasets</h2>
+  <div class="ark-table-wrap">
+    <table class="ark-table">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Description</th>
+          <th>Format</th>
+          <th class="col-dl">Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in files %}
+        <tr>
+          <td><code>{{ f.name }}</code></td>
+          <td>{{ f.description }}</td>
+          <td>{{ f.format }}</td>
+          <td class="col-dl">
+            <a class="ark-btn ark-btn-outline ark-btn-sm"
+               href="/data/files/{{ f.name }}">Download</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="prose">
+  <h2>How to use these files</h2>
+  <p>Every CSV opens with a header row. Most are wide &mdash; one row per year, one
+     column per race group. Three are long, with one row per year-and-race:
+     <code>business_ownership_by_race.csv</code>, <code>unemployment_annual.csv</code>
+     and <code>wealth_by_race_timeseries.csv</code>. Column-level provenance (units,
+     year span, source, notes) is recorded in <code>data_dictionary.csv</code> for the
+     files it covers and in <code>series_registry.json</code> for the rest.</p>
+  <p>The series cover eleven dimensions: wealth, income, employment, poverty, housing,
+     education, criminal justice, business ownership, demographics, the historical
+     slave trade, and geography.</p>
+  <p>For the methodology behind each series &mdash; race-category harmonization,
+     source vintage, and validation &mdash; see the
+     <a href="/methodology">Methodology &amp; Provenance</a> page. To reproduce the
+     pipeline that builds these files from the original public APIs, see the
+     <a href="/code">Code &amp; Reproducibility</a> page.</p>
+</section>
+{% endblock %}

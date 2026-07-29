@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Income & Poverty by Race — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Income &amp; Poverty</h1>
+  <p class="lede">Black median household income averaged <strong>62.8&thinsp;%</strong>
+     of White income across 2005–2022 and stood at <strong>64.3&thinsp;%</strong> in
+     2022, the latest year — yet Black poverty runs at 2.19&times; the White rate
+     (2005–2022 average; 2.16&times; in 2022). Both gaps are
+     severe, but neither approaches the wealth gap, where Black households hold
+     less than one fifth of White median net worth.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>Source:</strong> U.S. Census Bureau,
+     <em>American Community Survey</em> (ACS): median household income by race
+     (table B19013, inflation-adjusted to 2022 dollars, 2005–2022) and poverty
+     rates by race (table B17001, 2005–2022). The ACS poverty rate is not the
+     nation's official poverty statistic — that measure comes from the Current
+     Population Survey's Annual Social and Economic Supplement — but it is the
+     series with the race detail and sample size these charts need.
+     <strong>2020 is missing from both series:</strong> the Census Bureau released
+     no standard ACS 1-year estimates for that year, so every line on this page
+     steps directly from 2019 to 2021 and no COVID-year observation exists to plot.
+     DuBois harmonizes these public-domain data; the original Census ACS series
+     remain authoritative.</p>
+</section>
+
+<section class="prose">
+  <h2>Median income: a persistent 63&percnt; ratio</h2>
+  <p>From 2005 through 2022, Black median household income has stayed between
+     <strong>61.2&thinsp;%</strong> (2015, the low) and <strong>64.3&thinsp;%</strong>
+     (2022, the high) of White median income — in real 2022 dollars, $43,034 (2012)
+     to $51,374 (2022) for Black households against $69,530 (2011) to $80,921 (2021)
+     for White households. The ratio barely budged across the Great Recession and
+     the long expansion that followed.</p>
+  <div id="income-chart" class="chart"></div>
+  <p class="status-note">Note: the line joins 2019 straight to 2021. There is no
+     2020 point because the Census Bureau published no standard ACS 1-year estimates
+     for 2020 — the break is a gap in the data, not a flat year.</p>
+</section>
+
+<section class="prose">
+  <h2>Poverty: 2.19&times; the White rate</h2>
+  <p>Where income is a flow, poverty is a threshold. By 2022 the Black poverty rate
+     stood at <strong>21.3&thinsp;%</strong> against a White rate of
+     <strong>9.85&thinsp;%</strong> — a ratio of 2.16&times;. Over the full series
+     the Black poverty rate has averaged <strong>2.19&times;</strong> the White
+     rate. The gap narrowed in the late 2010s expansion but widened again in 2021.</p>
+  <div id="poverty-chart" class="chart"></div>
+  <p class="status-note">Note: as with income, all three lines jump 2019 to 2021.
+     No standard ACS 1-year estimates were published for 2020, so the pandemic year
+     itself is absent from this chart.</p>
+</section>
+
+<section class="prose">
+  <h2>The income gap vs the wealth gap</h2>
+  <p>The contrast is the point. Black households earn about <strong>63 cents</strong>
+     of every dollar of White median income averaged over 2005–2022, and 64 cents in
+     2022, the year charted below — a large but bounded gap. Yet when the
+     same comparison is made for <em>wealth</em> (net worth, accumulated across
+     generations), Black households hold only about <strong>18 cents</strong> of
+     every dollar of White median wealth. Income inequality is severe; wealth
+     inequality is an order of magnitude deeper.</p>
+  <p>The implication: closing the income gap would not, by itself, close the wealth
+     gap. Wealth compounds across decades through homeownership, inheritance, and
+     asset appreciation — channels the data on the pages for
+     <a class="ark-btn" href="/housing">housing</a> and
+     <a class="ark-btn" href="/wealth-gap">wealth</a> make plain.</p>
+  <div id="contrast-chart" class="chart"></div>
+</section>
+
+<script>
+// Two real datasets embedded server-side: income_ratio.csv + poverty_gap.csv.
+var INCOME = {{ income | tojson }};
+var POVERTY = {{ poverty | tojson }};
+
+var P = (window.ArkPlotly && ArkPlotly.palette())
+      || { accent: "#8b1a1a", dim: "#5a6673", line: "#dde3ea",
+           colorway: ["#8b1a1a", "#6b7280", "#0d9488"] };
+
+// ---- Chart 1: Black/White median income ratio (2005–2022) ----
+var incomeRatio = {
+  type: "scatter", mode: "lines+markers",
+  x: INCOME.map(function (d) { return d.year; }),
+  y: INCOME.map(function (d) { return d.ratio * 100; }),
+  name: "Black income as % of White",
+  hovertemplate: "<b>%{x}</b><br>%{y:.1f}% of White median income<extra></extra>",
+  line: { width: 3, color: P.accent, shape: "spline" },
+  marker: { size: 7 }
+};
+var incomeLayout = {
+  title: "Black median household income as % of White (2005–2022)",
+  margin: { l: 60, r: 30, t: 52, b: 44 }, height: 440,
+  xaxis: { title: { text: "Year" }, dtick: 3 },
+  yaxis: { title: { text: "Black income as % of White" }, ticksuffix: "%",
+           rangemode: "tozero", range: [0, 75] }
+};
+
+// ---- Chart 2: poverty rate by race over time ----
+var povBlack = {
+  type: "scatter", mode: "lines", x: POVERTY.map(function (d) { return d.year; }),
+  y: POVERTY.map(function (d) { return d.black; }), name: "Black poverty rate",
+  hovertemplate: "<b>%{x}</b><br>Black: %{y:.1f}%<extra></extra>",
+  line: { width: 3, color: P.accent }
+};
+var povWhite = {
+  type: "scatter", mode: "lines", x: POVERTY.map(function (d) { return d.year; }),
+  y: POVERTY.map(function (d) { return d.white; }), name: "White poverty rate",
+  hovertemplate: "<b>%{x}</b><br>White: %{y:.1f}%<extra></extra>",
+  line: { width: 2.5, color: P.colorway[1] }
+};
+var povHispanic = {
+  type: "scatter", mode: "lines", x: POVERTY.map(function (d) { return d.year; }),
+  y: POVERTY.map(function (d) { return d.hispanic; }), name: "Hispanic poverty rate",
+  hovertemplate: "<b>%{x}</b><br>Hispanic: %{y:.1f}%<extra></extra>",
+  line: { width: 2.5, color: P.colorway[2], dash: "dash" }
+};
+var povertyLayout = {
+  title: "Poverty rate by race (2005–2022)",
+  margin: { l: 60, r: 30, t: 52, b: 44 }, height: 440,
+  xaxis: { title: { text: "Year" }, dtick: 3 },
+  yaxis: { title: { text: "Poverty rate (%)" }, ticksuffix: "%", rangemode: "tozero" }
+};
+
+// ---- Chart 3: income gap vs wealth gap contrast (two bars) ----
+// Both bars are 2022 values, and the labels must state the values actually plotted:
+// income 64.3% (income_ratio.csv, 2022) vs wealth 18.2% (2022, Fed SCF). The
+// 2005-2022 mean income ratio is 62.8% — a different statistic, discussed in the
+// prose above, and deliberately NOT used as this bar's label.
+var contrastTraces = [{
+  type: "bar",
+  x: ["Median income (2022)", "Median wealth (2022)"],
+  y: [64.3, 18.2],
+  text: ["64.3% (≈$0.64 per $1)", "18.2% (≈$0.18 per $1)"],
+  textposition: "outside",
+  hovertemplate: "<b>%{x}</b><br>Black share of White: %{y:.1f}%<extra></extra>",
+  marker: { color: [P.accent, P.colorway[2]], line: { width: 0 } }
+}];
+var contrastLayout = {
+  title: "Black share of White: income vs wealth (2022)",
+  margin: { l: 60, r: 30, t: 52, b: 44 }, height: 380,
+  yaxis: { title: { text: "Black share of White (%)" }, ticksuffix: "%",
+           rangemode: "tozero", range: [0, 80] },
+  showlegend: false,
+  annotations: [{
+    x: 0.5, y: 0.5, xref: "paper", yref: "paper",
+    text: "Wealth gap is 3.5× deeper than the income gap",
+    showarrow: false, font: { size: 12, color: P.dim }
+  }]
+};
+
+// `downloads` (optional) points at the real CSV backing the chart, served by the
+// path-traversal-safe /data/files/<name> route — never a JSON endpoint labelled CSV.
+function draw(id, traces, layout, downloads) {
+  if (window.ArkChart) {
+    var spec = { traces: traces, layout: layout, title: layout.title,
+                 filename: "dubois_" + id.replace("-chart", "") };
+    if (downloads) spec.downloads = downloads;
+    ArkChart.render(id, spec);
+  } else if (window.ArkPlotly) {
+    layout.title = { text: layout.title };
+    ArkPlotly.plot(id, traces, layout, { filename: "dubois_" + id.replace("-chart", "") });
+  }
+}
+
+draw("income-chart", [incomeRatio], incomeLayout,
+     { csv: "/data/files/income_ratio.csv" });
+draw("poverty-chart", [povBlack, povWhite, povHispanic], povertyLayout,
+     { csv: "/data/files/poverty_gap.csv" });
+// The contrast chart splices two sources (income_ratio.csv + the 2022 SCF wealth
+// summary), so no single CSV honestly represents it; it keeps ArkChart's built-in
+// client-side "Download CSV" button instead of a mislabelled backend link.
+draw("contrast-chart", contrastTraces, contrastLayout);
+</script>
+{% endblock %}

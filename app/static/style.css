@@ -1,0 +1,119 @@
+/* DuBois — site-specific styles (page body + prose; ASK owns header/footer chrome) */
+
+/* Hero */
+.hero { text-align: center; padding: 3rem 1rem 2rem; }
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.5rem;
+  color: var(--ark-fg);
+}
+.hero .lede {
+  font-size: clamp(1rem, 2.5vw, 1.35rem);
+  line-height: 1.55;
+  max-width: 680px;
+  margin: 0 auto;
+  color: var(--ark-fg-dim);
+}
+
+/* Prose sections */
+.prose { max-width: 760px; margin: 2.5rem auto; padding: 0 1rem; }
+.prose h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 2.5rem 0 0.75rem;
+  color: var(--ark-fg);
+}
+.prose p { line-height: 1.65; margin: 0.75rem 0; color: var(--ark-fg); }
+.prose .status-note {
+  background: var(--ark-bg-soft);
+  border-left: 3px solid var(--ark-accent);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+.prose .note { font-size: 0.9rem; color: var(--ark-fg-dim); }
+.prose strong { color: var(--ark-fg); }
+
+/* Chart container */
+.chart {
+  width: 100%;
+  min-height: 400px;
+  margin: 1.5rem 0;
+}
+
+/* Dimension cards (landing page) */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+.card.race-dim-card {
+  background: var(--ark-card-bg, var(--ark-bg-soft));
+  border: 1px solid var(--ark-line);
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.card.race-dim-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.race-dim-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--ark-accent);
+  letter-spacing: -0.02em;
+}
+.race-dim-name {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0.4rem 0 0.25rem;
+  color: var(--ark-fg);
+}
+.race-dim-note {
+  font-size: 0.85rem;
+  color: var(--ark-fg-dim);
+  line-height: 1.4;
+}
+.race-dim-source {
+  font-size: 0.78rem;
+  color: var(--ark-fg-dim);
+  margin-top: 0.5rem;
+  opacity: 0.7;
+}
+
+/* Data tables */
+.ark-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  margin: 1rem 0;
+}
+.ark-table th {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 2px solid var(--ark-line);
+  font-weight: 600;
+  color: var(--ark-fg);
+}
+.ark-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--ark-line);
+  color: var(--ark-fg);
+  vertical-align: top;
+}
+.ark-table code {
+  background: var(--ark-bg-soft);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+/* Chart actions (download row) */
+.chart-actions { margin: 1rem 0; }

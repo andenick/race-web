@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Methodology & Provenance — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Methodology &amp; Provenance</h1>
+  <p class="lede">Sources, race-category harmonization, and validation for every
+     figure on this site. DuBois reconstructs public-domain data; original agencies
+     remain authoritative.</p>
+</section>
+
+<section class="prose">
+  <h2>Authoritative sources</h2>
+  <p>Every figure on this site traces to one of these original sources:</p>
+  <table class="ark-table">
+    <thead>
+      <tr><th>Dimension</th><th>Source</th><th>Series / table</th><th>Span</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Wealth</td><td>Federal Reserve — Survey of Consumer Finances</td><td>Weighted median net worth by race (SCF <code>RACE</code> variable, 5 implicates)</td><td>1989–2022 (12 waves)</td></tr>
+      <tr><td>Income</td><td>US Census — ACS B19013</td><td>Median household income by race-iteration (A/B/C/D/H/I)</td><td>2005–2022 — 17 years, no 2020</td></tr>
+      <tr><td>Employment</td><td>BLS — Current Population Survey (via FRED)</td><td>LNS14000003 (White), LNS14000006 (Black), monthly SA → annual avg. The annual file runs from 1954; the Black/White ratio series begins 1972, when Black data starts</td><td>1972–2024 complete; 2025 partial (6 months)</td></tr>
+      <tr><td>Poverty</td><td>US Census — ACS B17001</td><td>Poverty status by race-iteration; rate = below poverty / total</td><td>2005–2022 — 17 years, no 2020</td></tr>
+      <tr><td>Housing</td><td>US Census — ACS B25003</td><td>Tenure by race-iteration; homeownership = owner-occupied / total</td><td>2005–2022 — 17 years, no 2020</td></tr>
+      <tr><td>Education</td><td>US Census — ACS C15002</td><td>Bachelor's+ attainment by race-iteration</td><td>2006–2022 — 16 years, no 2020</td></tr>
+      <tr><td>Criminal justice</td><td>Bureau of Justice Statistics — <em>Prisoners in 2020</em></td><td>Imprisonment rate per 100,000 by race (Fig 2)</td><td>2010–2020</td></tr>
+      <tr><td>Business</td><td>US Census — Annual Business Survey (ABS)</td><td>Employer firms, employees and payroll by owner race (ABS Company Summary)</td><td>2018–2021</td></tr>
+      <tr><td>Geography</td><td>US Census — ACS B19013A/B</td><td>Median household income, White and Black, across 390 metro and micro areas</td><td>2022</td></tr>
+      <tr><td>Demographics</td><td>MeasuringWorth (Williamson) + HSUS cross-validation</td><td>US total population; by-race detail (ACS B02001/B03002) only from 2005</td><td>1790–2024, 235 years unbroken (by race 2005–2022 — 17 years, no 2020)</td></tr>
+      <tr><td>Slave trade</td><td>SlaveVoyages — Trans-Atlantic Slave Trade Database</td><td>TAST 2019 release (36,108 voyages)</td><td>1514–1866 — 335 of 353 calendar years carry a voyage</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="prose">
+  <h2>Race-category harmonization</h2>
+  <p>Race terminology follows US Census conventions: the "alone" universe (not
+     "alone or in combination"). Hispanic is treated as a separate ethnicity rather than
+     a race category. In the ACS race-iteration suffixes that means <code>I</code> is
+     the Hispanic or Latino iteration, while <code>H</code> is White alone, not Hispanic
+     or Latino — the non-Hispanic White benchmark that appears in our income series as
+     the <code>White nH</code> columns. The SCF uses
+     its own <code>RACE</code> coding: 1989–2019 = White/Black/Hispanic/Other (no
+     Asian); 2022 adds an Asian category — not back-imputed.</p>
+  <p class="note"><strong>Known limit:</strong> the 1989 Black-wealth value (6.0&thinsp;%)
+     is suspect, resting on a small Black subsample and on the SCF race coding used in
+     that wave. It is flagged v2-verify and excluded from synthesis findings.</p>
+</section>
+
+<section class="prose">
+  <h2>Validation</h2>
+  <p>Cross-source validation is run by the upstream construction pipeline, not by this
+     site. Its result is recorded in the <code>validation</code> field of
+     <code>series_registry.json</code>, which reports V10 (P10) 7/7 and V_ALL
+     (consolidated) 16/16 passing across the Wealth, Employment, Income, Poverty,
+     Housing, Criminal justice and Slave trade panels. No validator artifact ships in
+     this repository, so treat that line as the pipeline's own record rather than
+     something you can re-run here.</p>
+  <p>No values on this site are fabricated by us, and we interpolate nothing: where a
+     year is missing it stays missing rather than being filled in. Where an original
+     source itself publishes imputed estimates, we say so and carry the figure through
+     as published — the trans-Atlantic slave-trade series is the case that matters, since
+     SlaveVoyages reports embarked and disembarked counts as TAST imputed totals that
+     correct for voyages with incomplete records. Those are the source's imputations,
+     labelled as such on the history page, not ours.</p>
+</section>
+
+<section class="prose">
+  <h2>Known gaps and caveats</h2>
+  <p>Each of these is a real limitation of the underlying data. We list them because a
+     chart alone will not show them.</p>
+  <ul>
+    <li><strong>2020 is missing everywhere the ACS is the source.</strong> The Census
+        Bureau did not release standard 1-year ACS estimates for 2020, so there is no
+        2020 row in the income, poverty, homeownership, educational-attainment or
+        race-share series. Charts that appear to span 2005&ndash;2022 (2006&ndash;2022 for
+        attainment) in fact have a one-year hole, and their lines simply bridge it.</li>
+    <li><strong>2025 unemployment is a partial year.</strong> The annual unemployment
+        file records <code>n_months = 6</code> for 2025, so the 2025 point is a six-month
+        average rather than a full-year one, and is not strictly comparable with the
+        years before it. It is plotted, but it is excluded from every multi-year average
+        quoted on this site: the headline Black/White unemployment ratio of
+        <strong>2.12&times;</strong> is the mean over the 53 complete years 1972–2024.
+        The only other short observation is Hispanic unemployment in 1973
+        (<code>n_months = 10</code>); no figure on this site is drawn from it.</li>
+    <li><strong>The 2021 ACS vintage is a break, not just a gap.</strong> Beyond the
+        missing 2020 row, the 2021 release itself is not cleanly comparable with 2019.
+        White bachelor's-or-higher attainment steps up 3.9 points across that interval
+        against a long-run average near half a point a year, and the White homeownership
+        rate steps up 2.9 points — both far larger than any other year-on-year move in
+        their series. Any comparison that straddles 2019–2021, including the apparent
+        widening of the education and homeownership gaps at the end of the window,
+        partly reflects a change in the survey rather than a change in the world. We
+        carry the published figures through unsmoothed and flag them on the affected
+        pages.</li>
+    <li><strong>The data dictionary is incomplete.</strong>
+        <code>data_dictionary.csv</code> documents 12 of the 20 data CSVs. Eight have no
+        dictionary row — homeownership, imprisonment, business ownership, metro income,
+        the three slave-trade files and the 2022 wealth-gap summary. Their provenance is
+        recorded in <code>series_registry.json</code> instead.</li>
+    <li><strong>The region-level slave-trade file is a partial subset.</strong>
+        <code>slavetrade_by_region.csv</code> covers 10,367 voyages and 2,891,050 people
+        disembarked, against 36,108 voyages and 9,202,995 disembarked in the summary —
+        roughly 29&thinsp;% of voyages and 31&thinsp;% of arrivals. Any region-level
+        figure drawn from it, including the mainland North America total, is a subset
+        and not a national total.</li>
+    <li><strong>The 1989 SCF Black median is suspect.</strong> The 6.0&thinsp;% ratio for
+        1989 rests on a small Black subsample in that wave. It is flagged v2-verify,
+        excluded from synthesis findings, and plotted but caveated on the wealth-gap
+        page.</li>
+  </ul>
+</section>
+
+<section class="prose">
+  <h2>Educational disclaimer</h2>
+  <p>DuBois is a research and educational dataset; figures are reconstructed from
+     public sources for analysis and are not official government statistics. For
+     authoritative figures, defer to the named original source for each dataset.</p>
+</section>
+{% endblock %}

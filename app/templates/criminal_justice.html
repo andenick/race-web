@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Imprisonment by Race — DuBois{% endblock %}
+{% block description %}Imprisonment rate per 100,000 by race, 2010–2020, from the Bureau of Justice Statistics. The Black–White imprisonment ratio averages 5.49× — level with wealth at the top of this site's disparity hierarchy.{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Imprisonment</h1>
+  <p class="lede">Imprisonment rate per 100,000 residents by race, 2010–2020 — the
+     Bureau of Justice Statistics <em>Prisoners</em> series across eleven annual
+     counts. Together with wealth, this is the harshest disparity measured on
+     this site.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>Source:</strong> Bureau of Justice Statistics,
+     <em>Prisoners</em> series (2010–2020, annual). Rates are sentenced prisoners
+     under state or federal jurisdiction per 100,000 U.S. residents of the
+     corresponding race. DuBois reconstructs these public-domain data; the original
+     BJS tables remain authoritative.
+     <strong>Where the provenance lives:</strong> this series has no row in
+     <code>data_dictionary.csv</code>, which covers only part of the collection. Its
+     record sits in <code>series_registry.json</code> instead, as series
+     <code>D1011</code> — "Imprisonment Rate by Race", units per 100,000, source
+     <em>BJS Prisoners in 2020</em>, Figure 2, years 2010–2020.</p>
+</section>
+
+<section class="prose">
+  <div id="cj-chart" class="chart"></div>
+</section>
+
+<section class="prose">
+  <h2>The harshest ratio</h2>
+  <p>Across the eleven years from 2010 to 2020 the Black imprisonment rate averaged
+     <strong>5.49&times;</strong> the White rate. That is the joint-largest
+     Black-to-White disparity on this site: wealth sits at <strong>5.48&times;</strong>
+     in the other direction (Black median net worth in 2022 was one-fifth of White),
+     a statistical tie rather than a clear ordering. Both are more than twice the
+     next-widest gaps — poverty at 2.19&times; and unemployment at 2.12&times;.</p>
+  <p>In 2010 the gap was at its widest: <strong>1,489</strong> Black Americans
+     imprisoned per 100,000 versus <strong>248</strong> White Americans — a
+     6.0&times; ratio and an absolute gap of 1,241 per 100,000. The ratio narrowed
+     steadily through the decade, falling to 5.08&times; in 2019 before a slight
+     uptick to <strong>5.13&times;</strong> in 2020, the pandemic year. (This file
+     records imprisonment <em>rates</em> only; it carries no admissions or releases
+     data, so nothing here explains what drove the 2020 level.) Even at its
+     narrowest, a Black
+     American was more than five times as likely to be imprisoned as a White
+     American.</p>
+</section>
+
+<section class="prose">
+  <h2>Download the data</h2>
+  <div id="cj-downloads" class="chart-actions"></div>
+</section>
+
+<script>
+// Imprisonment rate per 100,000 by race, 2010–2020 (BJS Prisoners series).
+// Real data from /api/criminal-justice (served from imprisonment_by_race.csv).
+var CJ = {{ imprisonment | tojson }};
+
+var OXBLOOD = '#8b1a1a';  // DuBois theme accent (themes/race.css)
+
+function lineTrace(key, name, color, width) {
+  return {
+    type: 'scatter',
+    mode: 'lines+markers',
+    x: CJ.map(function (d) { return d.year; }),
+    y: CJ.map(function (d) { return d[key]; }),
+    name: name,
+    hovertemplate: '<b>' + name + '</b><br>%{x}: %{y:,} per 100,000<extra></extra>',
+    line: { width: width, shape: 'spline', color: color },
+    marker: { size: width >= 3 ? 7 : 5 }
+  };
+}
+
+// Black trace emphasized in oxblood; the other four races in muted greys.
+var traces = [
+  lineTrace('black',    'Black',            OXBLOOD,        3.5),
+  lineTrace('aian',     'Am. Indian / AK Nat.', '#c0793a',  2),
+  lineTrace('hispanic', 'Hispanic',         '#6b7280',       2),
+  lineTrace('white',    'White',            '#9aa3ad',       2),
+  lineTrace('asian',    'Asian',            '#b8bdc4',       2)
+];
+
+var layoutExtra = {
+  title: 'Imprisonment rate per 100,000 by race (2010–2020)',
+  margin: { l: 64, r: 30, t: 52, b: 44 },
+  height: 480,
+  xaxis: { title: { text: 'Year' }, dtick: 1 },
+  yaxis: { title: { text: 'Rate per 100,000' }, rangemode: 'tozero' }
+};
+
+if (window.ArkChart) {
+  ArkChart.render('cj-chart', {
+    traces: traces,
+    layout: layoutExtra,
+    title: layoutExtra.title,
+    filename: 'dubois_imprisonment',
+    // Real CSV behind this chart, via the path-traversal-safe /data/files/<name>
+    // route — not a JSON endpoint wearing a CSV label.
+    downloads: { csv: '/data/files/imprisonment_by_race.csv' }
+  });
+} else if (window.ArkPlotly) {
+  layoutExtra.title = { text: layoutExtra.title };
+  ArkPlotly.plot('cj-chart', traces, layoutExtra, { filename: 'dubois_imprisonment' });
+}
+
+// Standalone "Download the data" row (the heading above the empty div).
+if (window.ArkDownloads) {
+  var _dl = document.getElementById('cj-downloads');
+  if (_dl) _dl.appendChild(ArkDownloads.buttons({ csv: '/data/files/imprisonment_by_race.csv' }, { label: 'Download:' }));
+}
+</script>
+{% endblock %}

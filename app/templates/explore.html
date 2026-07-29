@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Explore the Data — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Explore the Data</h1>
+  <p class="lede">Every published series in the DuBois registry — its dimension,
+     source, units, and time span. Search to filter; every row links through to the
+     page that visualizes it.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>{{ series | length }} series</strong> across
+     wealth, income, employment, poverty, housing, education, criminal justice,
+     business ownership, geography, demographics, and the historical slave trade.
+     All figures trace to authoritative public sources; nothing is fabricated or
+     interpolated.</p>
+</section>
+
+{# Human-readable dimension names, keyed by the registry's internal panel id, so the
+   grid never prints a build-system code to a reader. Unmapped ids fall back to the
+   readable half of the id rather than the raw string. #}
+{% set DIMENSION_NAMES = {
+     'P1_Wealth': 'Wealth',
+     'P2_Income': 'Income',
+     'P3_Employment': 'Employment',
+     'P4_Poverty': 'Poverty',
+     'P5_Housing': 'Housing',
+     'P6_Education': 'Education',
+     'P8_CriminalJustice': 'Criminal justice',
+     'P9_Business': 'Business ownership',
+     'P10_Demographics': 'Demographics',
+     'P12_Historical': 'Historical (slave trade)',
+     'P13_Geographic': 'Geography'
+   } %}
+
+<section class="prose">
+  <div class="explore-controls">
+    <input id="explore-search" type="search" class="ark-btn ark-btn-sm explore-search"
+           placeholder="Search by name, dimension, source, or series ID&hellip;"
+           aria-label="Filter series">
+    <span id="explore-count" class="explore-count">{{ series | length }} of {{ series | length }} series</span>
+  </div>
+
+  <table class="ark-table explore-table" id="explore-table">
+    <thead>
+      <tr>
+        <th>Series</th>
+        <th>Dimension</th>
+        <th>Units</th>
+        <th>Years</th>
+        <th>Source</th>
+        <th>View</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in series %}
+      {% set dimension = DIMENSION_NAMES.get(s.panel, s.panel.split('_', 1)[-1]) %}
+      <tr class="explore-row"
+          data-search="{{ s.display_name }} {{ s.sid }} {{ dimension }} {{ s.source }} {{ s.units }} {{ s.years }}">
+        <td><strong>{{ s.display_name }}</strong><br>
+            <span class="explore-sid">{{ s.sid }}</span></td>
+        <td>{{ dimension }}</td>
+        <td><code>{{ s.units }}</code></td>
+        <td>{{ s.years }}</td>
+        <td>{{ s.source }}</td>
+        <td>{% if s.link %}<a class="ark-btn ark-btn-sm" href="{{ s.link }}">{{ s.link_label }}</a>{% else %}<span class="explore-no-link">—</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="prose">
+  <h2>How to read this registry</h2>
+  <p>Each row is a <em>series</em> — a single, coherent measurement tracked over
+     time or across geography. The <strong>Dimension</strong> column places it in one
+     of eleven subject areas: wealth, income, employment, poverty, housing, education,
+     criminal justice, business ownership, demographics, the historical slave trade, or
+     geography. Each has its own page, and every series here links through to it.</p>
+  <p>Read the <strong>Source</strong> column to tell a measured series from a computed
+     one. Where it begins with <em>derived</em> — <code>derived (SCF)</code>,
+     <code>derived (BLS CPS)</code>, <code>derived (TAST)</code> — the series is
+     calculated from other series as a ratio, a gap, or a share. Every other row is
+     loaded directly from the original source named in that column.</p>
+  <p><a class="ark-btn" href="/methodology">Full methodology &amp; provenance &rarr;</a></p>
+</section>
+
+<style>
+/* Explore-page-specific controls (page-local; kit owns shared chrome) */
+.explore-controls {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin: 1rem 0; flex-wrap: wrap;
+}
+.explore-search {
+  flex: 1 1 320px; min-width: 200px;
+  padding: 0.5rem 0.75rem; font-size: 0.95rem;
+  border: 1px solid var(--ark-line); border-radius: 6px;
+  background: var(--ark-bg-soft); color: var(--ark-fg);
+}
+.explore-search:focus { outline: 2px solid var(--ark-accent); outline-offset: -1px; }
+.explore-count { font-size: 0.85rem; color: var(--ark-fg-dim); white-space: nowrap; }
+.explore-sid { font-size: 0.75rem; color: var(--ark-fg-dim); font-family: monospace; }
+.explore-no-link { color: var(--ark-fg-dim); opacity: 0.5; }
+</style>
+
+<script>
+// Lightweight client-side filter over the series registry (offline, no API call).
+(function () {
+  var input = document.getElementById('explore-search');
+  var rows = document.querySelectorAll('.explore-row');
+  var countEl = document.getElementById('explore-count');
+  var total = rows.length;
+  if (!input) return;
+  input.addEventListener('input', function () {
+    var q = this.value.trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function (r) {
+      var hay = (r.getAttribute('data-search') || '').toLowerCase();
+      var match = q === '' || hay.indexOf(q) >= 0;
+      r.style.display = match ? '' : 'none';
+      if (match) shown++;
+    });
+    // Always "N of M series" — a lone match used to render a bare "1 series"
+    // with no denominator, which read as a total rather than a filtered count.
+    countEl.textContent = shown + ' of ' + total + ' series';
+  });
+})();
+</script>
+{% endblock %}

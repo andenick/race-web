@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Business Ownership by Race — DuBois{% endblock %}
+{% block description %}Share of U.S. employer firms by owner race, 2018–2021, from the Census Annual Business Survey. Black-owned firms were 2.73% of U.S. employer firms in 2021 — 161,031 firms — against a Black population share of about 12–13%.{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Business Ownership</h1>
+  <p class="lede">Share of U.S. employer firms by race of owner, 2018–2021 — the
+     Census Annual Business Survey (ABS) across four annual snapshots. In
+     <strong>2021</strong> the five race groups account for <strong>5,695,910</strong>
+     employer firms, or <strong>96.64&thinsp;%</strong> of the universe; a sixth
+     published group, Hispanic ownership, is an ethnicity crosscut that overlaps
+     them and cannot be added on top.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>Source:</strong> U.S. Census Bureau, Annual
+     Business Survey (ABS), Company Summary — employer firms by race of owner,
+     2018–2021, classified by the reported race of the majority owner(s).
+     <strong>The categories are not mutually exclusive and do not exhaust the
+     universe.</strong> The file's sixth group, <code>race_group 91</code>
+     (Hispanic), is an ethnicity crosscut: a Hispanic-owned firm is also counted in
+     whichever of the White, Black, Asian or other race rows its owners report. So
+     the five race rows — and only those five — form the partition: in 2021 they sum
+     to <strong>96.64&thinsp;%</strong>, the remaining ~3.4&thinsp;% being employer
+     firms the survey assigns to none of them. Adding the Hispanic row on top gives
+     98.33&thinsp;%, but that figure double-counts and is not a coverage rate. The
+     race-row coverage is 96.19&thinsp;% (2018), 96.48&thinsp;% (2019),
+     96.56&thinsp;% (2020) and 96.64&thinsp;% (2021).
+     <strong>Where the provenance lives:</strong> this series has no row in
+     <code>data_dictionary.csv</code>, which covers only part of the collection. Its
+     record sits in <code>series_registry.json</code> instead, as series
+     <code>D1012</code> — "Employer Firms by Owner Race", source Census ABS Company
+     Summary, years 2018–2021. DuBois reconstructs these public-domain data; the
+     original ABS tables remain authoritative.</p>
+</section>
+
+<section class="prose">
+  <div id="biz-chart" class="chart"></div>
+  <p class="note">The six bars are the owner groups the ABS publishes. Only the five
+     race bars partition the universe, and in 2021 they cover 96.64&thinsp;% of
+     employer firms; the rest are unassigned. The Hispanic bar is an ethnicity
+     crosscut drawn from the same firms, so it must be read alongside the race bars,
+     never added to them.</p>
+</section>
+
+<section class="prose">
+  <h2>Underrepresentation at the ownership frontier</h2>
+  <p>In 2021, Black-owned firms accounted for <strong>2.73&thinsp;%</strong> of U.S.
+     employer firms — <strong>161,031</strong> of them. The five race groups together
+     account for <strong>5,695,910</strong> firms, 96.64&thinsp;% of the universe;
+     White-owned firms alone held <strong>82.0&thinsp;%</strong>. Yet Black Americans
+     make up about <strong>12–13&thinsp;%</strong> of the U.S. population
+     (12.18&thinsp;% in 2022, the nearest year this collection measures). If
+     ownership matched population share — 12.18&thinsp;% against 2.73&thinsp;% —
+     Black-owned firms would number roughly <strong>four and a half times</strong>
+     as many.</p>
+  <p>The Black share did rise over the four-year window — from 2.18&thinsp;% in 2018
+     to 2.73&thinsp;% in 2021, a gain of roughly half a percentage point. Asian-owned
+     firms held steady near 10–11&thinsp;% of the total, and White-owned firms
+     remained above 82&thinsp;% every year. The ownership frontier, in other words,
+     is dominated by one group to a degree that the population shares do not begin
+     to explain.</p>
+</section>
+
+<section class="prose">
+  <h2>Download the data</h2>
+  <div id="biz-downloads" class="chart-actions"></div>
+</section>
+
+<script>
+// Share of U.S. employer firms by race of owner — 2021 snapshot (Census ABS).
+// Real data from /api/business (served from business_ownership_by_race.csv).
+var BIZ = {{ business | tojson }};
+
+var OXBLOOD = '#8b1a1a';  // DuBois theme accent (themes/race.css)
+var SNAPSHOT_YEAR = 2021;
+
+// Filter to the latest year, then sort descending so the dominant group is at top.
+var snap = BIZ.filter(function (d) { return d.year === SNAPSHOT_YEAR; })
+              .sort(function (a, b) { return a.share_pct - b.share_pct; });
+
+function barColor(race) {
+  // Emphasize the Black-owned bar in oxblood; mute the rest.
+  return /Black/i.test(race) ? OXBLOOD : '#9aa3ad';
+}
+
+var traces = [{
+  type: 'bar',
+  orientation: 'h',
+  x: snap.map(function (d) { return d.share_pct; }),
+  y: snap.map(function (d) { return d.race; }),
+  customdata: snap.map(function (d) { return d.firms.toLocaleString() + ' firms'; }),
+  hovertemplate: '<b>%{y}</b><br>%{x:.2f}% of employer firms<br>%{customdata}<extra></extra>',
+  text: snap.map(function (d) { return d.share_pct.toFixed(2) + '%'; }),
+  textposition: 'outside',
+  marker: {
+    color: snap.map(function (d) { return barColor(d.race); }),
+    line: { width: 0 }
+  }
+}];
+
+var layoutExtra = {
+  title: 'Share of U.S. employer firms by race of owner (' + SNAPSHOT_YEAR + ')',
+  margin: { l: 170, r: 60, t: 52, b: 44 },
+  height: 420,
+  xaxis: {
+    title: { text: 'Share of employer firms (% of total)' },
+    ticksuffix: '%',
+    rangemode: 'nonnegative'
+  }
+};
+
+if (window.ArkChart) {
+  ArkChart.render('biz-chart', {
+    traces: traces,
+    layout: layoutExtra,
+    title: layoutExtra.title,
+    filename: 'dubois_business_ownership',
+    // Real CSV behind this chart, via the path-traversal-safe /data/files/<name>
+    // route — not a JSON endpoint wearing a CSV label.
+    downloads: { csv: '/data/files/business_ownership_by_race.csv' }
+  });
+} else if (window.ArkPlotly) {
+  layoutExtra.title = { text: layoutExtra.title };
+  ArkPlotly.plot('biz-chart', traces, layoutExtra, { filename: 'dubois_business_ownership' });
+}
+
+// Standalone "Download the data" row (the heading above the empty div).
+if (window.ArkDownloads) {
+  var _dl = document.getElementById('biz-downloads');
+  if (_dl) _dl.appendChild(ArkDownloads.buttons({ csv: '/data/files/business_ownership_by_race.csv' }, { label: 'Download:' }));
+}
+</script>
+{% endblock %}

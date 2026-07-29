@@ -1,0 +1,14 @@
+# Keep build context (and the image) free of local cruft. Stale .pyc copied into
+# an image is a known deploy gotcha on this estate.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+.mypy_cache/
+.git/
+.gitignore
+*.bak*
+*.orig
+*~

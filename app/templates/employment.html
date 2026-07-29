@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}The Black–White Employment Gap — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>The Employment Gap</h1>
+  <p class="lede">The Black-to-White unemployment ratio, 1972–2024 in complete years
+     (2025 is a partial reading) — a stubborn roughly 2:1 line that has held across
+     half a century of business cycles, from the Volcker recession to the COVID
+     shock.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>Source:</strong> U.S. Bureau of Labor Statistics,
+     <em>Current Population Survey</em> (CPS), annual average unemployment rates by
+     race (1972–2025). Recession shading follows NBER business-cycle dating.
+     <strong>One caveat on the final data point:</strong> every year through 2024 averages
+     twelve monthly observations, but 2025 averages only six (January–June), so the
+     2025 reading is a partial-year figure plotted alongside full-year ones and may
+     move when the rest of the year is published. DuBois harmonizes these
+     public-domain data; the original BLS series remain authoritative.</p>
+</section>
+
+<section class="prose">
+  <div id="employment-chart" class="chart"></div>
+</section>
+
+<section class="prose">
+  <h2>What the data show</h2>
+  <p>Across the 53 complete years from 1972 to 2024 the Black unemployment rate has
+     averaged <strong>2.12&times;</strong> the White rate — the figure quoted
+     elsewhere on this site, which excludes the partial 2025 reading. (Including
+     2025 would put it at 2.11&times;.) The ratio is remarkably stable:
+     it never fell below 1.58&times; (2020, the COVID year, when both rates surged
+     together) and reached as high as 2.57&times; in 1989. Recessions raise both
+     rates, and the absolute gap between them usually widens in downturns — in the
+     1981–82 Volcker recession Black unemployment climbed to a postwar peak near
+     <strong>20&thinsp;%</strong> while White unemployment peaked around
+     9.6&thinsp;%.</p>
+  <p>In every single year on record a Black American was at least 1.5&times; as
+     likely to be unemployed as a White American. But the shaded recession bands on
+     the chart above hold a genuine surprise, and it runs against the intuition that
+     downturns simply stretch the gap: the dotted ratio line <em>falls</em> in every
+     one of them. It dropped from 2.34&times; to 2.20&times; across 1981–82, from
+     2.36&times; to 2.05&times; across 1990–91, from 2.18&times; to 2.07&times;
+     across 2000–01, from 1.95&times; to 1.74&times; across 2008–09, and from
+     1.86&times; to 1.58&times; across 2019–20 — the lowest reading in the whole
+     54-year series.</p>
+  <p>The ratio and the gap are measuring different things, and in a slump they move
+     in opposite directions. White unemployment rises by the larger <em>multiple</em>,
+     off a much lower base, which compresses the ratio; Black unemployment rises by
+     the larger number of <em>percentage points</em>, which widens the absolute gap.
+     The COVID year is the clean case: the White rate more than doubled, from
+     3.3&thinsp;% to 7.3&thinsp;%, while the Black rate rose from 6.1&thinsp;% to
+     11.6&thinsp;% — a 1.9-fold rise. So the ratio fell to its record low of
+     1.58&times; at the very moment the gap widened from 2.8 to 4.2 percentage
+     points. That gap-widening holds in four of those five recessions; 1990–91 is
+     the exception, where the gap held roughly flat (6.6 to 6.4 points) before
+     opening to 7.6 points in 1992.</p>
+  <p>The corollary is that the ratio peaks late in long expansions rather than in
+     slumps: its two highest readings are 2.57&times; in 1989 and
+     2.48&times; in 1988, when the White rate had fallen to 4.5&thinsp;% and
+     4.7&thinsp;% — levels the Black rate has never once reached in this series,
+     whose own floor is 5.5&thinsp;% (2023). A tight labor market pulls the White
+     rate down further than it ever pulls the Black rate.</p>
+</section>
+
+<section class="prose">
+  <h2>Recession peaks by race</h2>
+  <p>Six of the seven major downturns since 1973 drove Black unemployment into
+     double digits. The 2001 dot-com recession is the lone exception, peaking at
+     9.8&thinsp;% — still twice the White peak of 4.9&thinsp;%. The table below
+     records the peak unemployment rate reached by each group during NBER-dated
+     recessions.</p>
+  <table class="ark-table">
+    <thead>
+      <tr><th>Recession</th><th>Black peak</th><th>White peak</th><th>Hispanic peak</th></tr>
+    </thead>
+    <tbody>
+      {% for r in recessions %}
+      <tr>
+        <td>{{ r.recession }}</td>
+        <td>{{ "%.1f"|format(r.black_peak) if r.black_peak is not none else "—" }}%</td>
+        <td>{{ "%.1f"|format(r.white_peak) if r.white_peak is not none else "—" }}%</td>
+        <td>{{ "%.1f"|format(r.hispanic_peak) if r.hispanic_peak is not none else "—" }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div id="recession-downloads" class="chart-actions"></div>
+</section>
+
+<script>
+// Black/White unemployment: rates (left axis) + ratio (right axis), with NBER
+// recession shading. Real data embedded server-side from unemployment_ratio.csv.
+var UEMP = {{ unemployment | tojson }};
+
+// Resolve theme tokens at runtime (oxblood accent, grid lines, dim text) so no
+// colors are hardcoded — these read the active ASK theme via ark-plotly.js.
+var P = (window.ArkPlotly && ArkPlotly.palette())
+      || { accent: "#8b1a1a", dim: "#5a6673", line: "#dde3ea", fg: "#14181d",
+           colorway: ["#8b1a1a", "#6b7280", "#0d9488"] };
+
+// Annotation chrome follows the viewer's theme via the kit's own isDark()/palette()
+// — Plotly cannot resolve CSS var(), so the tokens are read through ArkPlotly.
+var _annoBg = (window.ArkPlotly && ArkPlotly.isDark()) ? 'rgba(22,27,34,0.85)' : 'rgba(255,255,255,0.85)';
+var _annoLine = (window.ArkPlotly && ArkPlotly.palette().line) || '#dde3ea';
+
+var YEARS = UEMP.map(function (d) { return d.year; });
+
+// NBER recession year bands (peak→trough months rounded out to whole years, and
+// matched against the peak/trough columns of unemployment_recession_peaks.csv).
+// The Great Recession band starts 2007, not 2008: the NBER peak is 2007-12.
+var BANDS = [[1973, 1975], [1980, 1980], [1981, 1982], [1990, 1991],
+             [2001, 2001], [2007, 2009], [2020, 2020]];
+var shapes = BANDS.map(function (b) {
+  return {
+    type: "rect", xref: "x", yref: "paper",
+    x0: b[0] - 0.5, x1: b[1] + 0.5, y0: 0, y1: 1,
+    line: { width: 0 }, fillcolor: P.line, opacity: 0.35
+  };
+});
+
+// Black unemployment rate (accent) and White rate (neutral) share the left axis;
+// the Black/White ratio rides a right axis so both stories read at a glance.
+var blackRate = {
+  type: "scatter", mode: "lines", x: YEARS, yaxis: "y",
+  y: UEMP.map(function (d) { return d.black; }),
+  name: "Black unemployment rate",
+  hovertemplate: "<b>%{x}</b><br>Black: %{y:.1f}%<extra></extra>",
+  line: { width: 3, color: P.accent }
+};
+var whiteRate = {
+  type: "scatter", mode: "lines", x: YEARS, yaxis: "y",
+  y: UEMP.map(function (d) { return d.white; }),
+  name: "White unemployment rate",
+  hovertemplate: "<b>%{x}</b><br>White: %{y:.1f}%<extra></extra>",
+  line: { width: 2.5, color: P.colorway[1] }
+};
+var ratio = {
+  type: "scatter", mode: "lines", x: YEARS, yaxis: "y2",
+  y: UEMP.map(function (d) { return d.ratio; }),
+  name: "Black-to-White ratio (×)",
+  hovertemplate: "<b>%{x}</b><br>Ratio: %{y:.2f}×<extra></extra>",
+  line: { width: 2.5, color: P.colorway[2], dash: "dot" }
+};
+
+var annotations = [{
+  x: 1983, y: 19.5, yref: "y", xref: "x",
+  text: "1981–82 Volcker recession:<br>Black unemployment peaked near 20%",
+  showarrow: true, arrowhead: 1, arrowsize: 1, arrowwidth: 1.5,
+  ax: 70, ay: -20, font: { size: 11 },
+  bgcolor: _annoBg, bordercolor: _annoLine, borderwidth: 1
+}];
+
+var layoutExtra = {
+  title: "Black vs White unemployment rate and ratio (1972–2025)",
+  margin: { l: 60, r: 64, t: 52, b: 44 },
+  height: 480,
+  xaxis: { title: { text: "Year" }, dtick: 5 },
+  yaxis: { title: { text: "Unemployment rate (%)" }, ticksuffix: "%", rangemode: "tozero" },
+  yaxis2: {
+    title: { text: "Black-to-White ratio (×)" }, overlaying: "y", side: "right",
+    rangemode: "tozero", dtick: 0.5,
+    gridcolor: P.line, zerolinecolor: P.line, linecolor: P.line,
+    tickfont: { color: P.dim }, titlefont: { color: P.dim }
+  },
+  shapes: shapes,
+  annotations: annotations
+};
+
+if (window.ArkChart) {
+  ArkChart.render("employment-chart", {
+    traces: [blackRate, whiteRate, ratio],
+    layout: layoutExtra,
+    title: layoutExtra.title,
+    filename: "dubois_employment_gap",
+    // Serve the real CSV that backs this chart, via the path-traversal-safe
+    // /data/files/<name> route — not a JSON endpoint wearing a CSV label.
+    downloads: { csv: "/data/files/unemployment_ratio.csv" }
+  });
+} else if (window.ArkPlotly) {
+  layoutExtra.title = { text: layoutExtra.title };
+  ArkPlotly.plot("employment-chart", [blackRate, whiteRate, ratio], layoutExtra,
+                 { filename: "dubois_employment_gap" });
+}
+
+// Download row for the recession-peaks table (its own CSV, not the chart's).
+if (window.ArkDownloads) {
+  var _dl = document.getElementById("recession-downloads");
+  if (_dl) _dl.appendChild(ArkDownloads.buttons(
+    { csv: "/data/files/unemployment_recession_peaks.csv" }, { label: "Download:" }));
+}
+</script>
+{% endblock %}

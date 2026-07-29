@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Historical Foundations — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Historical Foundations</h1>
+  <p class="lede">Two hundred and thirty-four years of population growth and three
+     and a half centuries of the trans-Atlantic slave trade — the demographic and
+     human-trafficking bedrock beneath every racial disparity measured on this site.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>Sources:</strong> US total population 1790–2024 from
+     MeasuringWorth (Samuel H. Williamson), cross-validated against HSUS bicentennial
+     census reconstructions at five benchmark years (agreement averages
+     99.80&thinsp;% and never falls below 99.70&thinsp;%, its 1850 low).
+     Trans-Atlantic slave-trade
+     data from the <em>SlaveVoyages</em> Trans-Atlantic Slave Trade Database (TAST 2019
+     release). Both are public-domain; DuBois reconstructs them faithfully.</p>
+</section>
+
+{# ───────────────────────── Chart 1: US population 1790–2024 ───────────────────────── #}
+<section class="prose">
+  <h2>A nation's growth, 1790–2024</h2>
+  <p>From fewer than 4 million at the first census to over 340 million today, US
+     population grew roughly 86-fold in 234 years — an average of about 1.4 million
+     people per year across the span, with the most rapid percentage growth in the
+     antebellum decades.</p>
+  <div id="population-chart" class="chart"></div>
+</section>
+
+{# ──────────────────────── Chart 2: Slave trade 1514–1866 ──────────────────────── #}
+<section class="prose">
+  <h2>The trans-Atlantic slave trade, 1514–1866</h2>
+  <p>The SlaveVoyages database documents <strong>{{ '{:,}'.format(summary.total_voyages | int) }}
+     voyages</strong> that embarked <strong>{{ '{:,.0f}'.format(summary.total_embarked_imputed | float) }}
+     enslaved Africans</strong>. An estimated 13.7&thinsp;% died during the Middle
+     Passage — roughly <strong>1.46 million people</strong> — leaving
+     {{ '{:,.0f}'.format(summary.total_disembarked_imputed | float) }} to disembark
+     in the Americas. The record runs from the first documented voyage in 1514 to the
+     final three voyages in 1866, a year after the legal abolition of slavery in the
+     United States — 352 years end to end, though only 335 of those 353 calendar years
+     carry a recorded voyage. The 18 blank years all fall between 1515 and 1543, where
+     the surviving record is thinnest.</p>
+  <div id="slavetrade-chart" class="chart"></div>
+  <p class="note">Each bar = total enslaved persons who disembarked in the Americas
+     that year (TAST 2019, imputed). Arrivals peaked in the 1820s (733,525), ahead of
+     the 1800s (703,254) and the 1790s (701,818); the heaviest eighteenth-century
+     decade, the 1790s, ranks third.</p>
+</section>
+
+<section class="prose">
+  <h2>What the data show</h2>
+  <p>The two series bookend the economic history this site examines. The population
+     curve traces a young republic's expansion through immigration, territorial
+     acquisition, and natural increase. The slave-trade curve traces the forced
+     migration that, over three and a half centuries, carried
+     <strong>{{ '{:,.0f}'.format(summary.total_embarked_imputed | float) }}</strong>
+     Africans out of Africa and landed
+     <strong>{{ '{:,.0f}'.format(summary.total_disembarked_imputed | float) }}</strong>
+     of them alive in the Americas — the foundational labor system of the Atlantic
+     economy.</p>
+  <p>Where those arrivals landed is a question this dataset answers only in part.
+     The region-level file (<code>slavetrade_by_region.csv</code>) codes 10,367 of the
+     36,108 voyages and 2,891,050 of the 9,202,995 arrivals — about 29&thinsp;% of
+     voyages and 31&thinsp;% of people. Every figure in it is therefore a subset, not
+     a national total, and it cannot be read as a count of arrivals in mainland North
+     America. Within the coded subset, 86.5&thinsp;% of arrivals are recorded in
+     Brazil and the Caribbean.</p>
+  <p>Together, these are the denominator and the dark numerator of American
+     economic stratification: the population that grew, and the people who were
+     trafficked to build that growth.</p>
+</section>
+
+<section class="prose">
+  <h2>Download the data</h2>
+  <div id="history-downloads" class="chart-actions"></div>
+</section>
+
+<script>
+// Annotation chrome follows the viewer's theme via the kit's own isDark()/palette()
+// — Plotly cannot resolve CSS var(), so the tokens are read through ArkPlotly.
+var _annoBg = (window.ArkPlotly && ArkPlotly.isDark()) ? 'rgba(22,27,34,0.85)' : 'rgba(255,255,255,0.85)';
+var _annoLine = (window.ArkPlotly && ArkPlotly.palette().line) || '#dde3ea';
+
+// ── Chart 1: US total population 1790–2024 (real MeasuringWorth data) ──
+var POP = {{ population | tojson }};
+
+var popTrace = {
+  type: 'scatter', mode: 'lines',
+  x: POP.map(function (d) { return d.year; }),
+  y: POP.map(function (d) { return d.population; }),
+  name: 'US total population',
+  hovertemplate: '<b>%{x}</b><br>%{y:,.0f} people<extra></extra>',
+  line: { width: 3, shape: 'spline' },
+  fill: 'tozeroy', fillcolor: 'rgba(139,26,26,0.08)'
+};
+
+var popLayout = {
+  title: 'US total population, 1790\u20132024',
+  margin: { l: 70, r: 30, t: 52, b: 44 },
+  height: 440,
+  xaxis: { title: { text: 'Year' } },
+  yaxis: { title: { text: 'Population (persons)' }, tickformat: ',.0f',
+           rangemode: 'tozero' }
+};
+
+if (window.ArkChart) {
+  ArkChart.render('population-chart', {
+    traces: [popTrace], layout: popLayout, title: popLayout.title,
+    filename: 'dubois_population_1790_2024'
+  });
+} else if (window.ArkPlotly) {
+  popLayout.title = { text: popLayout.title };
+  ArkPlotly.plot('population-chart', [popTrace], popLayout, { filename: 'dubois_population_1790_2024' });
+}
+
+// ── Chart 2: annual slave-trade disembarkations 1514–1866 (real TAST 2019) ──
+var TRADE = {{ slavetrade | tojson }};
+
+var tradeTrace = {
+  type: 'bar',
+  x: TRADE.map(function (d) { return d.year; }),
+  y: TRADE.map(function (d) { return d.disembarked; }),
+  name: 'Enslaved disembarked',
+  hovertemplate: '<b>%{x}</b><br>%{y:,.0f} disembarked<extra></extra>',
+  marker: { color: '#8b1a1a', line: { width: 0 } }
+};
+
+var tradeLayout = {
+  title: 'Annual enslaved disembarkations in the Americas, 1514\u20131866 (TAST 2019)',
+  margin: { l: 70, r: 30, t: 52, b: 44 },
+  height: 480,
+  xaxis: { title: { text: 'Year' } },
+  yaxis: { title: { text: 'Persons disembarked (imputed)' }, rangemode: 'tozero' },
+  annotations: [{
+    x: 1820, y: 1, yref: 'paper',
+    text: 'Overall Middle-Passage mortality: 13.7%<br>(~1.46M of 10.67M embarked)',
+    showarrow: false, xanchor: 'center', font: { size: 11 },
+    bgcolor: _annoBg, bordercolor: _annoLine, borderwidth: 1
+  }]
+};
+
+if (window.ArkChart) {
+  ArkChart.render('slavetrade-chart', {
+    traces: [tradeTrace], layout: tradeLayout, title: tradeLayout.title,
+    filename: 'dubois_slavetrade_annual'
+  });
+} else if (window.ArkPlotly) {
+  tradeLayout.title = { text: tradeLayout.title };
+  ArkPlotly.plot('slavetrade-chart', [tradeTrace], tradeLayout, { filename: 'dubois_slavetrade_annual' });
+}
+
+// ── Download row: the two real CSVs behind this page, served by the
+//    path-traversal-safe /data/files/<name> route (not a JSON endpoint
+//    wearing a CSV label). One button per chart, in chart order.
+if (window.ArkDownloads) {
+  var _dl = document.getElementById('history-downloads');
+  if (_dl) {
+    _dl.appendChild(ArkDownloads.buttons(
+      { csv: '/data/files/demographics_population.csv' },
+      { label: 'US population, 1790–2024:' }));
+    _dl.appendChild(ArkDownloads.buttons(
+      { csv: '/data/files/slavetrade_annual.csv' },
+      { label: 'Slave trade, 1514–1866:' }));
+  }
+}
+</script>
+{% endblock %}

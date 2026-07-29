@@ -1,0 +1,41 @@
+{#- Arcanum Site Kit (ASK) v2.0 — the Research Triad (hero action row).
+   Data · Code · Outputs, in that fixed order. Starts hidden; ark-triad.js fills
+   the hrefs + sublabels from this site's ecosystem.json `cdf` block and reveals
+   it only once all three targets resolve (never dead "#" buttons).
+
+   Include directly under the site title/tagline block, above the fold:
+       (% include "_shared/triad.html" %)      <- real syntax uses curly-percent
+
+   VENDORED NOTE: the kit's upstream partial carries its usage docs in an HTML
+   comment containing a literal include example. Jinja does not honour HTML
+   comments, so that example is parsed and executed — including this file into a
+   page recurses until RecursionError. The docs are stripped here and the example
+   is de-fanged above. Worth fixing upstream in the kit.
+-#}
+<section class="ark-triad ark-triad--pending" data-ark-triad hidden
+         aria-label="Get the data and the code for this research">
+  <a class="ark-triad-btn ark-triad-data" data-cdf="data" href="#"
+     aria-label="Download the data for this site">
+    <span class="ark-triad-icon" aria-hidden="true">&#8595;</span>
+    <span class="ark-triad-text">
+      <span class="ark-triad-label">Download the Data</span>
+      <span class="ark-triad-sub" data-cdf-sub="data"></span>
+    </span>
+  </a>
+  <a class="ark-triad-btn ark-triad-code" data-cdf="code" href="#"
+     aria-label="Download the research code for this site">
+    <span class="ark-triad-icon" aria-hidden="true">&#8595;</span>
+    <span class="ark-triad-text">
+      <span class="ark-triad-label">Download the Code</span>
+      <span class="ark-triad-sub" data-cdf-sub="code"></span>
+    </span>
+  </a>
+  <a class="ark-triad-btn ark-triad-outputs ark-triad-secondary" data-cdf="outputs" href="#"
+     aria-label="Explore the finished outputs of this site">
+    <span class="ark-triad-icon" aria-hidden="true">&#8594;</span>
+    <span class="ark-triad-text">
+      <span class="ark-triad-label">Explore the Outputs</span>
+      <span class="ark-triad-sub" data-cdf-sub="outputs"></span>
+    </span>
+  </a>
+</section>

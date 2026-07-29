@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}The Homeownership Gap — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>The Housing Gap</h1>
+  <p class="lede">Homeownership by race, 2005–2022 — a persistent gap that has
+     averaged <strong>27.1 percentage points</strong> over the period and stood at
+     <strong>28.2 points</strong> in 2022, when 44.1&thinsp;% of Black households
+     owned their home against 72.3&thinsp;% of White households. Homes are most
+     Americans' largest asset, so this gap is also a wealth gap.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>Source:</strong> U.S. Census Bureau,
+     <em>American Community Survey</em> (ACS), table B25003 (tenure by
+     race-iteration): homeownership rate = owner-occupied households ÷ all occupied
+     households, by race of householder, 2005–2022.
+     <strong>2020 is missing:</strong> the Census Bureau released no standard ACS
+     1-year estimates for that year, so the lines below run straight from 2019 to
+     2021 — the flat-looking stretch is a gap in the data, not a pause in the
+     trend. DuBois harmonizes these public-domain data; the original Census ACS
+     series remain authoritative.</p>
+</section>
+
+<section class="prose">
+  <div id="housing-chart" class="chart"></div>
+</section>
+
+<section class="prose">
+  <h2>What the data show</h2>
+  <p>The Black homeownership rate has never crossed 47&thinsp;% in this window,
+     while the White rate has never fallen below 68&thinsp;%, bottoming at
+     68.5&thinsp;% in 2015. The Black–White gap averaged
+     <strong>27.1 percentage points</strong> across 2005–2022 and actually
+     <em>widened</em> after the Great Recession: Black ownership fell from
+     45.8&thinsp;% (2005) to a trough of <strong>40.7&thinsp;% (2016)</strong>, a
+     loss of 5.0 points, while White ownership dipped 3.3 points over the same
+     period.</p>
+  <p class="note"><strong>A break at 2021.</strong> The White homeownership rate
+     steps up 2.9 points between the 2019 and 2021 ACS vintages (69.7&thinsp;% to
+     72.6&thinsp;%), far more than any other year-on-year move in the series. The
+     2020 experimental-weighting change sits in that gap, so comparisons that
+     straddle it — including the widening of the gap at the end of the window —
+     partly reflect a change in the survey rather than in housing. See
+     <a href="/methodology">Methodology &amp; Provenance</a>.</p>
+  <p>Because home equity is the primary store of wealth for the median American
+     household, the homeownership gap is not separate from the wealth gap — it is
+     one of its engines. A 27-to-28-point ownership gap compounds, decade after decade,
+     into the 18&percnt; Black-to-White wealth ratio documented on the
+     <a class="ark-btn" href="/wealth-gap">wealth-gap page</a>.</p>
+</section>
+
+<script>
+// Homeownership rate by race (2005–2022), real data from housing_ownership_gap.csv.
+var HOUSING = {{ housing | tojson }};
+
+var P = (window.ArkPlotly && ArkPlotly.palette())
+      || { accent: "#8b1a1a", dim: "#5a6673", line: "#dde3ea",
+           colorway: ["#8b1a1a", "#6b7280", "#0d9488", "#b8860b"] };
+
+var YEARS = HOUSING.map(function (d) { return d.year; });
+
+var whiteOwn = {
+  type: "scatter", mode: "lines+markers", x: YEARS,
+  y: HOUSING.map(function (d) { return d.white; }), name: "White homeownership",
+  hovertemplate: "<b>%{x}</b><br>White: %{y:.1f}%<extra></extra>",
+  line: { width: 2.5, color: P.colorway[1], shape: "spline" }, marker: { size: 6 }
+};
+var blackOwn = {
+  type: "scatter", mode: "lines+markers", x: YEARS,
+  y: HOUSING.map(function (d) { return d.black; }), name: "Black homeownership",
+  hovertemplate: "<b>%{x}</b><br>Black: %{y:.1f}%<extra></extra>",
+  line: { width: 3, color: P.accent, shape: "spline" }, marker: { size: 7 }
+};
+var hispanicOwn = {
+  type: "scatter", mode: "lines+markers", x: YEARS,
+  y: HOUSING.map(function (d) { return d.hispanic; }), name: "Hispanic homeownership",
+  hovertemplate: "<b>%{x}</b><br>Hispanic: %{y:.1f}%<extra></extra>",
+  line: { width: 2.5, color: P.colorway[2], shape: "spline", dash: "dash" }, marker: { size: 6 }
+};
+var asianOwn = {
+  type: "scatter", mode: "lines+markers", x: YEARS,
+  y: HOUSING.map(function (d) { return d.asian; }), name: "Asian homeownership",
+  hovertemplate: "<b>%{x}</b><br>Asian: %{y:.1f}%<extra></extra>",
+  line: { width: 2.5, color: P.colorway[3], shape: "spline" }, marker: { size: 6 }
+};
+
+var layoutExtra = {
+  title: "Homeownership rate by race (2005–2022)",
+  margin: { l: 60, r: 30, t: 52, b: 44 }, height: 480,
+  xaxis: { title: { text: "Year" }, dtick: 3 },
+  yaxis: { title: { text: "Homeownership rate (%)" }, ticksuffix: "%",
+           rangemode: "tozero", range: [0, 80] }
+};
+
+if (window.ArkChart) {
+  ArkChart.render("housing-chart", {
+    traces: [whiteOwn, blackOwn, hispanicOwn, asianOwn],
+    layout: layoutExtra,
+    title: layoutExtra.title,
+    filename: "dubois_housing_gap",
+    // Real CSV behind this chart, via the path-traversal-safe /data/files/<name>
+    // route — not a JSON endpoint wearing a CSV label.
+    downloads: { csv: "/data/files/housing_ownership_gap.csv" }
+  });
+} else if (window.ArkPlotly) {
+  layoutExtra.title = { text: layoutExtra.title };
+  ArkPlotly.plot("housing-chart", [whiteOwn, blackOwn, hispanicOwn, asianOwn],
+                 layoutExtra, { filename: "dubois_housing_gap" });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}DuBois — Race, Stratification & Economic Disparities{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>DuBois</h1>
+  <p class="lede">{{ headlines.tagline }} — six measurable dimensions of racial
+     economic stratification in the United States, reconstructed from authoritative
+     public sources for researchers, journalists, and policy analysts.</p>
+</section>
+
+{#- ASK v2.0 Research Triad — Data · Code · Outputs, above the fold (D13). -#}
+{% include "_shared/triad.html" %}
+
+<section class="prose">
+  <h2>The hierarchy of disparity</h2>
+  <p>Black–White economic gaps are not uniform: measured as disparity ratios they
+     range from about <strong>1.6&times;</strong> to <strong>5.5&times;</strong> — a
+     roughly three-and-a-half-fold spread depending on which dimension you measure.
+     Wealth and imprisonment show the starkest ratios: Black Americans are
+     <strong>imprisoned at 5.5&times;</strong> the White rate (2010–2020 average) and
+     hold just <strong>18&thinsp;%</strong> of White median household wealth (2022) —
+     a 5.5&times; wealth ratio in the other direction. Income and homeownership gaps,
+     though severe, are narrower at roughly 1.6&times;. This chart ranks the six
+     dimensions by their Black-to-White disparity ratio, where 1.0 would mean perfect
+     parity. Each dimension is measured over its own window and by its own agency —
+     the ratios are comparable in direction and magnitude, not in vintage.</p>
+  <div id="hierarchy-chart" class="chart"></div>
+</section>
+
+<section class="cards">
+  {% for h in headlines.hierarchy %}
+  <div class="card race-dim-card">
+    <div class="race-dim-value">{{ h.value }}</div>
+    <div class="race-dim-name">{{ h.dim }}</div>
+    <div class="race-dim-note">{{ h.note }}</div>
+    <div class="race-dim-source">Source: {{ h.source }}</div>
+  </div>
+  {% endfor %}
+</section>
+
+<section class="prose">
+  <h2>The north-star question</h2>
+  <p>If a single number anchors this project it is the <strong>Black–White median
+     wealth gap</strong>. Measured by the Federal Reserve's Survey of Consumer Finances
+     across twelve triennial waves (1989–2022), it fell to <strong>8.2&thinsp;%</strong>
+     in the aftermath of the Great Recession (2013 survey) — the lowest reading since
+     1989 — before rebounding to <strong>18.2&thinsp;%</strong> by 2022, the highest on
+     record and still less than one fifth of White median wealth. The series minimum,
+     6.0&thinsp;% in 1989, rests on a small subsample we flag as suspect; see
+     <a href="/wealth-gap">the wealth-gap page</a> for that caveat.</p>
+  <p><a class="ark-btn" href="/wealth-gap">Explore the wealth-gap time series &rarr;</a></p>
+</section>
+
+<script>
+// 6-dimension hierarchy bar chart (Plotly via ASK ark-plotly.js).
+// Each bar = the Black-to-White disparity ratio (>= 1; 1 = parity), computed
+// transparently from the real headline values in headlines.json. The original
+// metric is shown as hovertext so no information is lost.
+var HIERARCHY = {{ headlines.hierarchy | tojson }};
+
+// Each hierarchy entry carries an explicit numeric `ratio` computed upstream from
+// the panel CSVs (see /methodology). The chart reads that field directly — it never
+// parses a human-readable string, so re-wording a note can never move a bar.
+function disparityRatio(item) {
+  return item.ratio;
+}
+
+// Reverse so the largest ratio is at the top of the horizontal bar chart.
+var sorted = HIERARCHY.slice().sort(function (a, b) {
+  return disparityRatio(a) - disparityRatio(b);
+});
+
+var traces = [{
+  type: 'bar',
+  orientation: 'h',
+  x: sorted.map(disparityRatio),
+  y: sorted.map(function (d) { return d.dim; }),
+  customdata: sorted.map(function (d) { return d.value + ' — ' + d.note + ' (' + d.source + ')'; }),
+  hovertemplate: '<b>%{y}</b><br>Disparity ratio: %{x:.2f}&times;<br>%{customdata}<extra></extra>',
+  text: sorted.map(function (d) { return d.value; }),
+  textposition: 'outside',
+  marker: { line: { width: 0 } }
+}];
+
+var layoutExtra = {
+  title: 'Black–White disparity by dimension (ratio; 1.0 = parity)',
+  margin: { l: 150, r: 60, t: 52, b: 44 },
+  height: 420,
+  xaxis: {
+    title: { text: 'Black-to-White disparity ratio (&times;)' },
+    rangemode: 'nonnegative',
+    dtick: 1
+  },
+  shapes: [{
+    type: 'line', x0: 1, x1: 1, y0: -0.5, y1: sorted.length - 0.5,
+    line: { dash: 'dash', width: 1.5, color: 'var(--ark-fg-dim)' }
+  }]
+};
+
+if (window.ArkChart) {
+  ArkChart.render('hierarchy-chart', { traces: traces, layout: layoutExtra, title: layoutExtra.title, filename: 'dubois_hierarchy' });
+} else if (window.ArkPlotly) {
+  layoutExtra.title = { text: layoutExtra.title };
+  ArkPlotly.plot('hierarchy-chart', traces, layoutExtra, { filename: 'dubois_hierarchy' });
+}
+</script>
+{% endblock %}

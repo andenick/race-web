@@ -1,0 +1,17 @@
+# DuBois
+
+> https://race.heterodata.org
+
+Race, stratification and economic disparities in the United States across six measurable dimensions — wealth, income, employment, poverty, housing, and criminal justice — reconstructed from authoritative public sources.
+
+Generated from ecosystem.json (kit v2.0).
+
+## Resources
+
+- Data: https://race.heterodata.org/data — formats: csv; kind: page
+  - Data dictionary: https://race.heterodata.org/data/files/data_dictionary.csv
+- Code: https://github.com/andenick/race-web — languages: python; license: MIT; kind: repo
+- Outputs: https://race.heterodata.org/explore — Explore the series
+- Website source: https://github.com/andenick/race-web
+- License: code MIT, data CC-BY-4.0
+- Citation: Anderson, N. (2026). DuBois. https://race.heterodata.org.

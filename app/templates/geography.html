@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Geography of the Income Gap — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>The Geography of the Gap</h1>
+  <p class="lede">Black and White median household income across {{ metro_count }}
+     US metro and micro areas, 2022 — the widest gaps track low Black incomes far
+     more closely than high White ones, and a majority of them sit in the Midwest.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>Source:</strong> US Census Bureau, American Community
+     Survey — median household income by race of householder, tables B19013A
+     (White alone) and B19013B (Black or African American alone), 2022. One
+     White-alone and one Black-alone median is shown for each metropolitan and
+     micropolitan statistical area. The sources on file record the survey and the
+     year but not the estimate vintage, so none is asserted here.
+     <strong>Where the provenance lives:</strong> this series has no row in
+     <code>data_dictionary.csv</code>, which covers only part of the collection. Its
+     record sits in <code>series_registry.json</code> instead, as series
+     <code>D1013</code> — "Median Income by Race by Metro", units current USD,
+     source Census ACS B19013A/B, year 2022. DuBois reconstructs these
+     public-domain data; the original ACS tables remain authoritative.</p>
+</section>
+
+<section class="prose">
+  <div id="metro-chart" class="chart"></div>
+  <p class="note">Showing the 15 widest dollar gaps out of {{ metro_count }} metro and
+     micro areas. The full ranked dataset of all {{ metro_count }} areas is available
+     as a CSV from the download below.</p>
+</section>
+
+<section class="prose">
+  <h2>What the data show</h2>
+  <p>The three widest gaps are the ones you would guess. In
+     <strong>San Jose–Sunnyvale–Santa Clara</strong>, White median household income
+     reaches <strong>$152,753</strong> while Black median income is just
+     <strong>$71,070</strong> — a gap of <strong>$81,683</strong>, the largest in the
+     country. Nearby <strong>Santa Cruz–Watsonville</strong> is second, where the
+     Black-to-White ratio falls to <strong>0.30&times;</strong> on a $78,339 gap, and
+     <strong>San Francisco–Oakland–Berkeley</strong> is third. But those three are the
+     entirety of California's presence in the top fifteen, and the rest of the list
+     looks nothing like them.</p>
+  <p>Across all {{ metro_count }} areas the dollar gap correlates only moderately with
+     White income (<strong>+0.39</strong>) and far more strongly, and negatively, with
+     Black income (<strong>&minus;0.62</strong>). What separates a wide-gap metro from
+     a narrow one is mostly how little the Black median reaches, not how high the White
+     median climbs. Among the fifteen widest gaps the median White income is
+     <strong>$79,956</strong> — barely above the <strong>$70,230</strong> median across
+     all {{ metro_count }} areas — while the median Black income is
+     <strong>$27,972</strong>, against <strong>$44,621</strong> across all areas.
+     La Crosse–Onalaska, Wisconsin, ranks seventh on a White median of only
+     <strong>$71,586</strong>; what puts it there is a Black median of
+     <strong>$17,927</strong>.</p>
+  <p>The regional pattern is not the coastal one either. Sorting the fifteen widest
+     dollar gaps by Census region gives <strong>Midwest 8</strong> — Faribault–Northfield
+     MN, Jefferson City MO, La Crosse–Onalaska WI, Kankakee IL, Springfield IL,
+     Dubuque IA, Green Bay WI and Iowa City IA — against <strong>West 4</strong> (the
+     three California metros plus Flagstaff AZ), <strong>South 2</strong>
+     (Charlottesville VA, Jefferson GA) and <strong>Northeast 1</strong>
+     (Trenton–Princeton NJ). No Pacific Northwest area appears at all. A clear
+     majority of the country's widest Black–White income gaps sit in mid-sized
+     Midwestern metros with ordinary White incomes and very low Black ones.</p>
+</section>
+
+<section class="prose">
+  <h2>Download the data</h2>
+  <div id="metro-downloads" class="chart-actions"></div>
+</section>
+
+<script>
+// Top-15 metros by Black/White income gap (grouped horizontal bar, real ACS 2022 data).
+var METROS = {{ metros_top15 | tojson }};
+
+// Reverse so the widest gap is at the TOP of the horizontal chart.
+var ordered = METROS.slice().reverse();
+
+// Shorten verbose metro names for axis labels (drop ", CA Metro Area" etc. suffixes).
+function shortName(full) {
+  return full
+    .replace(/,\s+[A-Z]{2}\s+(Metro|Micro)\s+Area$/, '')
+    .replace(/\s+(Metro|Micro)\s+Area$/, '')
+    .replace(/,\s+([A-Z]{2})$/, ', $1');
+}
+
+var traceWhite = {
+  type: 'bar', orientation: 'h',
+  x: ordered.map(function (m) { return m.white_income; }),
+  y: ordered.map(function (m) { return shortName(m.metro_name); }),
+  name: 'White median income',
+  hovertemplate: '<b>%{y}</b><br>White: $%{x:,.0f}<extra></extra>',
+  marker: { line: { width: 0 } }
+};
+
+var traceBlack = {
+  type: 'bar', orientation: 'h',
+  x: ordered.map(function (m) { return m.black_income; }),
+  y: ordered.map(function (m) { return shortName(m.metro_name); }),
+  name: 'Black median income',
+  hovertemplate: '<b>%{y}</b><br>Black: $%{x:,.0f}<extra></extra>',
+  customdata: ordered.map(function (m) { return '$' + m.gap_dollars.toLocaleString(); }),
+  marker: { line: { width: 0 } }
+};
+
+var layoutExtra = {
+  title: 'Top 15 metros by Black\u2013White income gap (2022 ACS, current USD)',
+  margin: { l: 190, r: 30, t: 52, b: 44 },
+  height: 560,
+  barmode: 'group',
+  xaxis: {
+    title: { text: 'Median household income (current USD)' },
+    tickprefix: '$', rangemode: 'nonnegative',
+    tickformat: ',.0f'
+  }
+  // No per-figure legend config: the Universal Graph Contract puts the legend
+  // below the plot, supplied centrally by ark-chart.js / ark-plotly.js.
+};
+
+if (window.ArkChart) {
+  ArkChart.render('metro-chart', {
+    traces: [traceWhite, traceBlack],
+    layout: layoutExtra,
+    title: layoutExtra.title,
+    filename: 'dubois_metro_income_gap',
+    // Real CSV behind this chart (all 390 areas), via the path-traversal-safe
+    // /data/files/<name> route — not a JSON endpoint wearing a CSV label.
+    downloads: { csv: '/data/files/metro_income_gap_2022.csv' }
+  });
+} else if (window.ArkPlotly) {
+  layoutExtra.title = { text: layoutExtra.title };
+  ArkPlotly.plot('metro-chart', [traceWhite, traceBlack], layoutExtra, { filename: 'dubois_metro_income_gap' });
+}
+
+// Standalone "Download the data" row (the heading above the empty div).
+if (window.ArkDownloads) {
+  var _dl = document.getElementById('metro-downloads');
+  if (_dl) _dl.appendChild(ArkDownloads.buttons({ csv: '/data/files/metro_income_gap_2022.csv' }, { label: 'Download:' }));
+}
+</script>
+{% endblock %}

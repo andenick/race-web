@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}DuBois — Race, Stratification & Economic Disparities{% endblock %}</title>
+  <meta name="description" content="{% block description %}Race-disaggregated US economic data across six measurable dimensions — wealth, income, employment, poverty, housing, and criminal justice — reconstructed from authoritative public sources.{% endblock %}">
+
+  <!-- Arcanum Site Kit (ASK) v1 — shared chrome + DuBois oxblood theme (vendored, no CDN) -->
+  <link rel="stylesheet" href="/static/_shared/arcanum.css?v={{ asset_ver }}">
+  <link rel="stylesheet" href="/static/_shared/themes/race.css?v={{ asset_ver }}">
+  <link rel="icon" href="/static/_shared/favicon.svg" type="image/svg+xml">
+
+  <!-- Site stylesheet (page-body + prose layout; kit owns header/footer chrome) -->
+  <link rel="stylesheet" href="/static/style.css?v={{ asset_ver }}">
+
+  <!-- Plotly (vendored, no CDN) -->
+  <script src="/static/vendor/plotly.min.js"></script>
+
+  {#- ASK v1 — shared Plotly theming + download buttons + chart entry point.
+      NOT `defer`: every page's chart code is a classic inline <script> inside the
+      content block, which executes at parse time. Deferred kit scripts would run
+      AFTER it, leaving window.ArkChart/ArkPlotly undefined and every chart blank.
+      These are dependency-free IIFEs that only assign to window, so loading them
+      synchronously here is safe and is what makes the charts render. -#}
+  <script src="/static/_shared/ark-plotly.js?v={{ asset_ver }}"></script>
+  <script src="/static/_shared/ark-downloads.js?v={{ asset_ver }}"></script>
+  <script src="/static/_shared/ark-chart.js?v={{ asset_ver }}"></script>
+  <script src="/static/_shared/ark-table.js?v={{ asset_ver }}"></script>
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<!-- Shared chrome: ASK header (mark + ecosystem switcher + nav) -->
+{% include "_shared/header.html" %}
+
+<div id="ark-main">
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+{#- ASK v2.0 Action Footer — REPLACES footer.html (one footer per page). Carries the
+    compact Research Triad + Website source + Cite this site ABOVE the MANDATED
+    dual-anchor colophon (heterodata.org hub + nickanderson.us architect), which is
+    preserved byte-for-byte from footer.html. -#}
+{% include "_shared/action-footer.html" %}
+
+{% block body_scripts %}{% endblock %}
+
+<!-- ASK chrome enhancer (no-JS-degradable switcher + theme toggle) + triad hydration -->
+<script>
+  window.ARK_CONFIG = {
+    site_key: "{{ site_key }}",
+    dpr_url: "{{ dpr_url | default('/methodology', true) }}",
+    ecosystem_url: "/static/_shared/ecosystem.json"
+  };
+  window.ARK_TRACK = { site: "{{ site_key }}", endpoint: "/__track" };
+</script>
+<script src="/static/_shared/arcanum-chrome.js?v={{ asset_ver }}" defer></script>
+<script src="/static/_shared/ark-track.js?v={{ asset_ver }}" defer></script>
+<script src="/static/_shared/ark-triad.js?v={{ asset_ver }}" defer></script>
+</body>
+</html>

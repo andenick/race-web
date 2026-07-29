@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}About — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>About</h1>
+  <p class="lede">Named for W.E.B. Du Bois (1868&ndash;1963), who pioneered the
+     empirical study of race and economic stratification in America.</p>
+</section>
+
+<section class="prose">
+  <h2>The namesake</h2>
+  <p>In 1899, William Edward Burghardt Du Bois published <em>The Philadelphia Negro</em>
+     &mdash; the first large-scale, empirically rigorous sociological study of a Black
+     community in the United States. Working door-to-door in Philadelphia's Seventh Ward,
+     Du Bois interviewed thousands of households, recording occupation, income, housing,
+     family structure, and church membership. He treated race not as a slogan but as a
+     phenomenon to be measured, and he insisted that the conditions of Black life could
+     be understood only through systematic, disaggregated data.</p>
+  <p>That conviction &mdash; that racial stratification must be <em>quantified</em> to be
+     understood &mdash; is the founding method of this dataset. We name it for him.</p>
+</section>
+
+<section class="prose">
+  <h2>What this dataset is</h2>
+  <p>DuBois assembles publicly-available data on racial and ethnic economic
+     stratification in the United States across six measurable dimensions:</p>
+  <ul>
+    <li><strong>Wealth</strong> &mdash; the Federal Reserve Survey of Consumer Finances (1989&ndash;2022).</li>
+    <li><strong>Income</strong> &mdash; median household income by race (Census ACS, 2005&ndash;2022).</li>
+    <li><strong>Employment</strong> &mdash; unemployment by race (BLS Current Population Survey, 1972&ndash;2024 complete years; 2025 is a partial six-month average).</li>
+    <li><strong>Poverty</strong> &mdash; poverty rate by race (Census ACS, 2005&ndash;2022).</li>
+    <li><strong>Housing</strong> &mdash; homeownership by race (Census ACS, 2005&ndash;2022).</li>
+    <li><strong>Criminal justice</strong> &mdash; imprisonment rate by race (Bureau of Justice Statistics, 2010&ndash;2020).</li>
+  </ul>
+  <p>These are supplemented by demographic context &mdash; US total population runs
+     1790&ndash;2024, while the by-race breakdown is much shorter and covers only
+     2005&ndash;2022 &mdash; along with educational attainment, business ownership, a 2022
+     metro-level income cross-section, and the historical record of the trans-Atlantic
+     slave trade (SlaveVoyages, 1514&ndash;1866).</p>
+</section>
+
+<section class="prose">
+  <h2>Data, not advocacy</h2>
+  <p>DuBois takes no policy position. It presents numbers, drawn from authoritative
+     public sources, with full provenance for every figure. The gaps it documents &mdash;
+     a Black-to-White wealth ratio that has never reached one fifth, peaking at
+     18.2&thinsp;% in 2022, an unemployment
+     ratio that has averaged roughly 2&times; for half a century &mdash; are reported as
+     the sources record them, not as any narrative requires. Readers and researchers
+     bring their own interpretation; the dataset's job is to make the underlying
+     measurement honest, traceable, and reproducible.</p>
+  <p>For sources, race-category harmonization, and validation, see
+     <a href="/methodology">Methodology &amp; Provenance</a>. For the code that builds
+     these series, see <a href="/code">Code &amp; Reproducibility</a>. To download any
+     dataset, see <a href="/data">Data</a>.</p>
+</section>
+{% endblock %}

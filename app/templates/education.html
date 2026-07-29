@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Education Attainment by Race — DuBois{% endblock %}
+{% block description %}Bachelor's-or-higher educational attainment by race, 2006–2022, from the Census ACS. In 2022, 25.4% of Black adults held a bachelor's degree versus 39% of White and 57% of Asian adults. The Black–White gap was stable near 12 points from 2006 to 2019 and reads 13.6 points in 2022, a step that coincides with the 2021 ACS vintage break.{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Education</h1>
+  <p class="lede">Share of adults aged 25 and over with a bachelor's degree or
+     higher, by race, 2006–2022 — the Census American Community Survey (table
+     C15002) across sixteen annual estimates.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>Source:</strong> U.S. Census Bureau, American
+     Community Survey, table C15002 (Educational attainment by sex by age), race
+     "alone" universe, 2006–2022 one-year estimates. Bachelor's-or-higher is the
+     sum of bachelor's, master's, professional, and doctoral degrees divided by the
+     population aged 25+. <strong>2020 is missing:</strong> the Census Bureau
+     released no standard ACS 1-year estimates for that year, so the window holds
+     sixteen estimates, not seventeen, and the lines below run straight from 2019 to
+     2021 — that stretch is a gap in the data, not a measured trend. DuBois
+     reconstructs these public-domain data; the original ACS tables remain
+     authoritative.</p>
+</section>
+
+<section class="prose">
+  <div id="edu-chart" class="chart"></div>
+  <p class="note">Sixteen annual estimates, 2006–2022. There is no 2020 point — the
+     Census Bureau cancelled the standard ACS 1-year release that year — so each
+     line is drawn straight across the 2019–2021 interval.</p>
+</section>
+
+<section class="prose">
+  <h2>Progress, but parity nowhere near</h2>
+  <p>Every group gained ground over the window — college attainment rose across the
+     board. But the gains were uneven. By 2022, <strong>25.4&thinsp;%</strong> of
+     Black adults held a bachelor's degree or higher, against <strong>39.0&thinsp;%</strong>
+     of White adults and <strong>57.4&thinsp;%</strong> of Asian adults. The
+     Black–White gap did not close: it stood at 11.7 percentage points in 2006 and
+     <strong>13.6 points in 2022</strong> — slightly wider, not narrower, after
+     sixteen years.</p>
+  <p class="note"><strong>Read that widening carefully.</strong> The gap is flat
+     between 11.4 and 12.0 points for every one of the fourteen years from 2006 to
+     2019, then steps to 13.5 points in 2021 and stays there. The step coincides
+     with the 2021 ACS vintage, in which White attainment jumps 3.9 points in a
+     single interval against a long-run average of about half a point a year. The
+     honest reading is that the gap was <em>stable</em> for fourteen measured years
+     and that the widening sits entirely across the 2019–2021 break, where the
+     survey itself changed. We report the arithmetic as published rather than
+     smooth it, but it should not be read as a trend. See
+     <a href="/methodology">Methodology &amp; Provenance</a>.</p>
+  <p>Asian attainment pulled furthest ahead, climbing from 49.2&thinsp;% to 57.4&thinsp;%.
+     Black attainment rose from 16.9&thinsp;% to 25.4&thinsp;% — real, measurable
+     progress in absolute terms, yet the relative position barely moved: Black
+     attainment in 2022 (25.4&thinsp;%) remained below where White attainment had
+     already been in 2006 (28.6&thinsp;%).</p>
+</section>
+
+<section class="prose">
+  <h2>Download the data</h2>
+  <div id="edu-downloads" class="chart-actions"></div>
+</section>
+
+<script>
+// Bachelor's-or-higher attainment (%) by race, 2006–2022 (Census ACS C15002).
+// Real data from /api/education (served from education_attainment_gap.csv).
+var EDU = {{ education | tojson }};
+
+var OXBLOOD = '#8b1a1a';  // DuBois theme accent (themes/race.css)
+
+function lineTrace(key, name, color, width) {
+  return {
+    type: 'scatter',
+    mode: 'lines+markers',
+    x: EDU.map(function (d) { return d.year; }),
+    y: EDU.map(function (d) { return d[key]; }),
+    name: name,
+    hovertemplate: '<b>' + name + '</b><br>%{x}: %{y:.1f}%<extra></extra>',
+    line: { width: width, shape: 'spline', color: color },
+    marker: { size: width >= 3 ? 7 : 5 }
+  };
+}
+
+// Black trace emphasized in oxblood; the other races in muted tones.
+var traces = [
+  lineTrace('asian',    'Asian',    '#2f6f6f', 2.5),
+  lineTrace('white',    'White',    '#9aa3ad', 2),
+  lineTrace('black',    'Black',    OXBLOOD,   3.5),
+  lineTrace('hispanic', 'Hispanic', '#c0793a', 2),
+  lineTrace('aian',     'Am. Indian / AK Nat.', '#6b7280', 2)
+];
+
+var layoutExtra = {
+  title: "Bachelor's degree or higher by race (2006–2022)",
+  margin: { l: 60, r: 30, t: 52, b: 44 },
+  height: 480,
+  xaxis: { title: { text: 'Year' }, dtick: 2 },
+  yaxis: { title: { text: "Share of adults 25+ with bachelor's+" }, ticksuffix: '%', rangemode: 'tozero' }
+};
+
+if (window.ArkChart) {
+  ArkChart.render('edu-chart', {
+    traces: traces,
+    layout: layoutExtra,
+    title: layoutExtra.title,
+    filename: 'dubois_education',
+    // Real CSV behind this chart, via the path-traversal-safe /data/files/<name>
+    // route — not a JSON endpoint wearing a CSV label.
+    downloads: { csv: '/data/files/education_attainment_gap.csv' }
+  });
+} else if (window.ArkPlotly) {
+  layoutExtra.title = { text: layoutExtra.title };
+  ArkPlotly.plot('edu-chart', traces, layoutExtra, { filename: 'dubois_education' });
+}
+
+// Standalone "Download the data" row (the heading above the empty div).
+if (window.ArkDownloads) {
+  var _dl = document.getElementById('edu-downloads');
+  if (_dl) _dl.appendChild(ArkDownloads.buttons({ csv: '/data/files/education_attainment_gap.csv' }, { label: 'Download:' }));
+}
+</script>
+{% endblock %}

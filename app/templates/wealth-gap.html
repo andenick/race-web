@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}The Black–White Wealth Gap — DuBois{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>The Wealth Gap</h1>
+  <p class="lede">Black median household wealth as a percentage of White median
+     wealth, 1989–2022 — the Federal Reserve Survey of Consumer Finances across
+     twelve triennial waves.</p>
+</section>
+
+<section class="prose">
+  <p class="status-note"><strong>Source:</strong> Board of Governors of the Federal
+     Reserve System, <em>Survey of Consumer Finances</em> (1989–2022, triennial).
+     Figures are inflation-adjusted median net worth by race of householder. DuBois
+     reconstructs and harmonizes these public-domain data; the original SCF remains
+     authoritative.</p>
+</section>
+
+<section class="prose">
+  <div id="wealth-chart" class="chart"></div>
+</section>
+
+<section class="prose">
+  <h2>What the data show</h2>
+  <p>Across the 33-year window the Black–White wealth ratio ranges from
+     <strong>6.0&thinsp;%</strong> to <strong>18.2&thinsp;%</strong>, and it sits at or
+     below roughly 16&thinsp;% in every wave but the last. After reaching 16.3&thinsp;%
+     in 1998 it eroded through the 2000s and fell to <strong>8.2&thinsp;%</strong> in the
+     2013 survey — the post-Great-Recession low, and the lowest reading since 1989.
+     Between the 2007 and 2013 waves Black median net worth fell 42.6&thinsp;% against
+     26.9&thinsp;% for White households, about <strong>1.6 times</strong> as fast. The
+     damage was also slower to surface: from 2007 to 2010 it was White median wealth that
+     fell further, and the Black decline only overtook it once the 2013 wave arrived.
+     By 2022 the ratio had rebounded to <strong>18.2&thinsp;%</strong>, the highest on
+     record, as Black median wealth rose from $14,039 to $49,590. White median wealth over
+     the same period rose from $170,852 to $272,000.</p>
+  <p>Even at its 2022 peak, Black median wealth is less than one fifth of White median
+     wealth — a ratio unchanged in its essential character since the survey began in
+     1989.</p>
+  <p class="note"><strong>A note on 1989.</strong> The series minimum, 6.0&thinsp;% in
+     1989, rests on a small Black subsample and on the race coding the SCF used in that
+     wave. We flag it as suspect and exclude it from synthesis findings, but we plot it
+     as the survey reports it rather than quietly drop it. Read the 1989 point, and any
+     comparison anchored on it, with that caveat in view. See
+     <a href="/methodology">Methodology &amp; Provenance</a> for the full note.</p>
+</section>
+
+<section class="prose">
+  <h2>Download the data</h2>
+  <div id="wealth-downloads" class="chart-actions"></div>
+</section>
+
+<script>
+// North-star chart: Black median wealth as % of White (1989–2022, Fed SCF).
+// Real data, server-injected from wealth_gap_timeseries.csv.
+var WEALTH = {{ wealth | tojson }};
+
+var trace = {
+  type: 'scatter',
+  mode: 'lines+markers',
+  x: WEALTH.map(function (d) { return d.year; }),
+  y: WEALTH.map(function (d) { return d.black_pct; }),
+  name: 'Black wealth as % of White',
+  hovertemplate: '<b>%{x}</b><br>%{y:.1f}% of White median wealth<extra></extra>',
+  line: { width: 3, shape: 'spline' },
+  marker: { size: 8 }
+};
+
+// Annotations for the 2013 post-recession low and the 2022 recovery.
+// (The series minimum is 6.0% in 1989 — see the "note on 1989" above.)
+// Annotation chrome follows the viewer's theme via the kit's own isDark()/palette()
+// — Plotly cannot resolve CSS var(), so the tokens are read through ArkPlotly.
+var _annoBg = (window.ArkPlotly && ArkPlotly.isDark()) ? 'rgba(22,27,34,0.85)' : 'rgba(255,255,255,0.85)';
+var _annoLine = (window.ArkPlotly && ArkPlotly.palette().line) || '#dde3ea';
+
+var annotations = [
+  {
+    x: 2013, y: 8.2,
+    text: '2013 post-recession low<br>8.2% (lowest since 1989)',
+    showarrow: true, arrowhead: 1, arrowsize: 1, arrowwidth: 1.5,
+    ax: 30, ay: 50,
+    font: { size: 11 },
+    bgcolor: _annoBg, bordercolor: _annoLine, borderwidth: 1
+  },
+  {
+    x: 2022, y: 18.2,
+    text: '2022 record<br>18.2% ($49,590 vs $272,000)',
+    showarrow: true, arrowhead: 1, arrowsize: 1, arrowwidth: 1.5,
+    ax: -40, ay: -50,
+    font: { size: 11 },
+    bgcolor: _annoBg, bordercolor: _annoLine, borderwidth: 1
+  }
+];
+
+var layoutExtra = {
+  title: 'Black median wealth as % of White median wealth (1989–2022)',
+  margin: { l: 60, r: 30, t: 52, b: 44 },
+  height: 480,
+  xaxis: { title: { text: 'SCF survey year' }, dtick: 3 },
+  yaxis: { title: { text: 'Black wealth as % of White' }, ticksuffix: '%', rangemode: 'tozero' },
+  annotations: annotations
+};
+
+if (window.ArkChart) {
+  ArkChart.render('wealth-chart', {
+    traces: [trace],
+    layout: layoutExtra,
+    title: layoutExtra.title,
+    filename: 'dubois_wealth_gap',
+    downloads: { csv: '/data/files/wealth_gap_timeseries.csv' }
+  });
+} else if (window.ArkPlotly) {
+  layoutExtra.title = { text: layoutExtra.title };
+  ArkPlotly.plot('wealth-chart', [trace], layoutExtra, { filename: 'dubois_wealth_gap' });
+}
+
+// Standalone "Download the data" block — serves the real CSV, not the JSON API.
+if (window.ArkDownloads) {
+  var _dl = document.getElementById('wealth-downloads');
+  if (_dl) _dl.appendChild(ArkDownloads.buttons({ csv: '/data/files/wealth_gap_timeseries.csv' }, { label: 'Download:' }));
+}
+</script>
+{% endblock %}

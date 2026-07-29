@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+
+# Published data files are distributed separately as a downloadable bundle,
+# not as repository content. See README.md -> Data.
+app/data/
