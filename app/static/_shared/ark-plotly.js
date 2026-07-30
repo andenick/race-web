@@ -151,16 +151,44 @@
         "margin.t": wrapped.indexOf("<br>") >= 0 ? 70 : 52 }); } catch (e) {}
     }
   }
+  // Universal Graph Contract: the drawing must fit INSIDE its card, never spill over the
+  // border. Plotly's `responsive:true` autosize measures the host element's BORDER box
+  // (offsetHeight) but then renders into that element's CONTENT box. `.ark-chart` is both
+  // the Plotly host and a bordered card (1px border + padding), so Plotly draws a canvas
+  // taller than the room it actually has, and the bottom of the drawing — the x-axis
+  // title, which Plotly places last — hangs below the card border. That was the
+  // "x-axis title clipped by 9px" defect: 8+8 padding + 1+1 border = 18px of canvas with
+  // nowhere to go, 9px of it past the border. It is invisible on charts with no x-axis
+  // title (why gerhard looked fine) and on charts whose caller set a large enough
+  // margin.b, which is why it read as a per-site quirk rather than one kit bug.
+  // Pin the height to the measured content box so the canvas fits by construction, at
+  // every width, regardless of what margins a caller passes.
+  function fitHeight(div) {
+    if (!div || !window.Plotly) return;
+    var cs = getComputedStyle(div);
+    // clientHeight excludes the border but INCLUDES padding — subtract it to get content.
+    var h = Math.floor(div.clientHeight
+      - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0));
+    if (!(h > 0)) return;
+    // Idempotence guard: only relayout when the height is actually wrong. Without this the
+    // ResizeObserver below and this call could ping-pong.
+    if (div._fullLayout && Math.abs((div._fullLayout.height || 0) - h) < 1) return;
+    try { Plotly.relayout(div, { height: h }); } catch (e) {}
+  }
+
   function plot(id, traces, extra, opts) {
     var div = (typeof id === "string") ? DOC.getElementById(id) : id;
     if (!div || !window.Plotly) return Promise.resolve(div);
     return Plotly.newPlot(div, traces, layout(extra), config(opts)).then(function () {
       register(div, extra, opts);
       responsiveTitle(div);
-      // re-fit on container resize (debounced) — prevents clipped / off-graph renders on relayout
+      fitHeight(div);
+      // re-fit on container resize (debounced) — prevents clipped / off-graph renders on
+      // relayout. Plotly.Plots.resize() re-derives the size from offsetHeight, so it
+      // reintroduces the border-box overshoot every time — fitHeight must run after it.
       if (window.ResizeObserver && !div._arkRO) {
         div._arkRO = new ResizeObserver(debounce(function () {
-          try { Plotly.Plots.resize(div); responsiveTitle(div); } catch (e) {}
+          try { Plotly.Plots.resize(div); responsiveTitle(div); fitHeight(div); } catch (e) {}
         }, 120));
         div._arkRO.observe(div);
       }

@@ -2,7 +2,7 @@
   "_comment": "Canonical Heterodata ecosystem manifest. Single source for the header ecosystem switcher, the heterodata.org hub cards, and the cross-site link graph. Each site may carry a `cdf` block (data/code/outputs targets + site_repo + citation + llms_txt) consumed by ark-triad.js to render the Research Triad and Action Footer; `cdf: null` means the site intentionally has no triad. Sites are listed hub-first, then alphabetically by title; each lists its subpages for the switcher dropdown. A page path may be an absolute URL. Sites fetch their own vendored copy of this file, so a change here takes effect per-site at that site's next redeploy.",
   "version": "3.0",
   "kit_version": "2.0",
-  "updated": "2026-07-26",
+  "updated": "2026-07-29",
   "brand": {
     "lead": "Heterodata",
     "tagline": "An Arcanum Research project"
@@ -604,6 +604,124 @@
       ]
     },
     {
+      "key": "myrdal",
+      "title": "Myrdal",
+      "display": "myrdal.heterodata.org",
+      "url": "https://myrdal.heterodata.org",
+      "accent": "#1d4ed8",
+      "status": "live",
+      "tagline": "Population as a cause of economic outcomes - long-run world population, the demographic transition, US county age structure and nativity, and internal migration flows, from named public statistical sources.",
+      "cdf": {
+        "provisional": true,
+        "data": {
+          "href": "/downloads/myrdal_data.zip",
+          "kind": "bundle",
+          "size": "37.4 MB",
+          "formats": [
+            "csv",
+            "xlsx",
+            "parquet"
+          ]
+        },
+        "code": {
+          "href": "/downloads/myrdal_code.zip",
+          "kind": "bundle",
+          "langs": [
+            "python"
+          ],
+          "license": "MIT"
+        },
+        "outputs": {
+          "href": "/explore",
+          "label": "Population explorer"
+        },
+        "site_repo": null,
+        "citation": "Anderson, N. (2026). Myrdal - Demography & Migration. https://myrdal.heterodata.org.",
+        "llms_txt": true
+      },
+      "pages": [
+        {
+          "label": "Explore",
+          "path": "/explore"
+        },
+        {
+          "label": "Data",
+          "path": "/data"
+        },
+        {
+          "label": "Code",
+          "path": "/code"
+        },
+        {
+          "label": "Methodology",
+          "path": "/methodology"
+        },
+        {
+          "label": "About",
+          "path": "/about"
+        }
+      ]
+    },
+    {
+      "accent": "#8b1a1a",
+      "cdf": {
+        "provisional": true,
+        "data": {
+          "href": "/data",
+          "kind": "page",
+          "formats": [
+            "csv"
+          ],
+          "license": "CC-BY-4.0",
+          "note": "20 race-economy CSVs + data dictionary + citation record",
+          "dictionary": "/data/files/data_dictionary.csv"
+        },
+        "code": {
+          "href": "https://github.com/andenick/race-web",
+          "kind": "repo",
+          "langs": [
+            "python"
+          ],
+          "license": "MIT"
+        },
+        "outputs": {
+          "href": "/explore",
+          "label": "Explore the series"
+        },
+        "site_repo": "https://github.com/andenick/race-web",
+        "citation": "Anderson, N. (2026). DuBois. https://race.heterodata.org.",
+        "llms_txt": true
+      },
+      "display": "race.heterodata.org",
+      "key": "race",
+      "pages": [
+        {
+          "label": "Wealth Gap",
+          "path": "/wealth-gap"
+        },
+        {
+          "label": "Employment",
+          "path": "/employment"
+        },
+        {
+          "label": "Criminal Justice",
+          "path": "/criminal-justice"
+        },
+        {
+          "label": "Data",
+          "path": "/data"
+        },
+        {
+          "label": "Methodology",
+          "path": "/methodology"
+        }
+      ],
+      "status": "live",
+      "tagline": "Race, stratification and economic disparities in the United States across six measurable dimensions — wealth, income, employment, poverty, housing, and criminal justice — reconstructed from authoritative public sources.",
+      "title": "DuBois",
+      "url": "https://race.heterodata.org"
+    },
+    {
       "key": "starcruiser",
       "cdf": {
         "provisional": false,
@@ -736,21 +854,23 @@
       "display": "erwin.heterodata.org",
       "url": "https://erwin.heterodata.org",
       "accent": "#4b5320",
-      "status": "planned",
+      "status": "live",
       "tagline": "Military spending as an endogenous feature of capitalism — US defense spending, cross-country military expenditure (SIPRI), NATO burden-sharing, the arms industry, and defense employment.",
       "cdf": {
         "provisional": true,
         "data": {
-          "href": "/downloads/data.zip",
-          "kind": "bundle",
+          "href": "/data",
+          "kind": "page",
           "formats": [
             "csv",
             "parquet"
-          ]
+          ],
+          "note": "330 published series; 329 as per-series CSV + Parquet, with a full data dictionary",
+          "dictionary": "/data"
         },
         "code": {
-          "href": "/downloads/code.zip",
-          "kind": "bundle",
+          "href": "https://github.com/andenick/erwin-web",
+          "kind": "repo",
           "langs": [
             "python"
           ],
@@ -762,7 +882,8 @@
         },
         "site_repo": "https://github.com/andenick/erwin-web",
         "citation": "Anderson, N. (2026). Erwin - Defense Economics. https://erwin.heterodata.org.",
-        "llms_txt": true
+        "llms_txt": true,
+        "_href_note": "data/code pointed at /data (page) and the public repo on 2026-07-29: the previous /downloads/data.zip and /downloads/code.zip values had NO route handler in the app and returned 404. Rendering the server-side triad made those dead links visitor-facing, so they were corrected to URLs that resolve. If bundle routes are added later, point these back at them - and verify with a request, not by reading the manifest."
       },
       "pages": [
         {
@@ -786,66 +907,6 @@
           "path": "/about"
         }
       ]
-    },
-    {
-      "key": "race",
-      "title": "DuBois",
-      "display": "race.heterodata.org",
-      "url": "https://race.heterodata.org",
-      "accent": "#8b1a1a",
-      "status": "staging",
-      "roadmap": true,
-      "tagline": "Race, stratification and economic disparities in the United States across six measurable dimensions — wealth, income, employment, poverty, housing, and criminal justice — reconstructed from authoritative public sources.",
-      "pages": [
-        {
-          "label": "Wealth Gap",
-          "path": "/wealth-gap"
-        },
-        {
-          "label": "Employment",
-          "path": "/employment"
-        },
-        {
-          "label": "Criminal Justice",
-          "path": "/criminal-justice"
-        },
-        {
-          "label": "Data",
-          "path": "/data"
-        },
-        {
-          "label": "Methodology",
-          "path": "/methodology"
-        }
-      ],
-      "cdf": {
-        "provisional": true,
-        "data": {
-          "href": "/data",
-          "kind": "page",
-          "formats": [
-            "csv"
-          ],
-          "license": "CC-BY-4.0",
-          "note": "20 race-economy CSVs + data dictionary + citation record",
-          "dictionary": "/data/files/data_dictionary.csv"
-        },
-        "code": {
-          "href": "https://github.com/andenick/race-web",
-          "kind": "repo",
-          "langs": [
-            "python"
-          ],
-          "license": "MIT"
-        },
-        "outputs": {
-          "href": "/explore",
-          "label": "Explore the series"
-        },
-        "site_repo": "https://github.com/andenick/race-web",
-        "citation": "Anderson, N. (2026). DuBois. https://race.heterodata.org.",
-        "llms_txt": true
-      }
     }
   ]
 }

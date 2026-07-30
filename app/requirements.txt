@@ -3,3 +3,10 @@ starlette>=0.40.0,<0.42.0
 uvicorn[standard]==0.34.0
 gunicorn==23.0.0
 jinja2>=3.1.5
+# carson-telemetry is VENDORED (it is a first-party package, NOT on PyPI). The
+# Dockerfile strips this line and pip-installs the local copy from
+# vendor/carson-telemetry instead — see the Dockerfile. The line is kept here so
+# the dependency is DECLARED where a reader looks for it; deleting it would make
+# the site's one instrumentation dependency invisible. That vendor tree is not
+# distributed in this repository; see README.md.
+carson-telemetry[fastapi]==1.0.0

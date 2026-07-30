@@ -1,0 +1,77 @@
+# race / DuBois — race.heterodata.org
+#
+# ROUTING: the container is reached at `race-web:8090` over the external
+# `homelab_default` docker network by whatever reverse proxy or tunnel fronts it.
+# No host ports are published, so the same port may be in use by other containers
+# on that network without colliding — each owns its own address. Do not "fix" this
+# by publishing a host port.
+#
+# DATA: race's data ships INSIDE the image (`app/data/`, 24 files, ~128 KB of
+# public-domain and CC-BY series). `app/main.py` loads headlines.json and
+# wealth_gap_timeseries.csv AT MODULE IMPORT, so the container cannot start without
+# them. There is deliberately no data bind-mount and therefore no *_DATA_DIR
+# variable to set.
+#
+# TELEMETRY: first-party usage counting, wired 2026-07-29. `app/main.py` hard-imports
+# the vendored carson_telemetry and installs
+# telemetry.ASGIMiddleware(service="race") — ONE service label, no separate label for
+# synthetic traffic, because this stack declares no healthcheck and no external
+# monitor probes the site, so there is no first-party traffic to separate out.
+#
+# ⚠ IF A HEALTHCHECK IS EVER ADDED BELOW, or an uptime monitor is pointed at this
+# site, split synthetic traffic onto its own service label IN THE SAME CHANGE, BEFORE
+# the probe starts running. The split cannot be applied retroactively: the middleware
+# never persists the user-agent (privacy contract), so once probe rows are mixed into
+# service="race" nothing in them distinguishes a monitor from a person. A /healthz
+# route already exists and is harmless on its own; a 30 s *probe* of it without the
+# split is not.
+#
+# NOTE: race also serves its own `POST /__track` route, which only writes a line to
+# the container log (visible via `docker logs race-web`, lost on prune). That is a
+# request beacon, NOT the same thing as the usage store configured below; it does not
+# appear in /api/kpis and never did. The store below is the measurement.
+
+services:
+  race-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: race-web:local
+    container_name: race-web
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Per-site first-party usage DB. Do not rename these two variables and do not
+      # put a secret here — there is none: the client hash salt is GENERATED into the
+      # salt dir, never supplied.
+      - CARSON_TELEMETRY_DB=/var/lib/carson/telemetry.db
+      # Shared salt dir so every gunicorn worker agrees on the day's salt; the
+      # salt rotates by UTC day and a raw client IP is never stored.
+      - CARSON_TELEMETRY_SALT_DIR=/var/lib/carson
+    volumes:
+      # Per-site telemetry volume. WRITABLE — the app writes telemetry.db plus the
+      # daily salt file here. Compose names it <project>_race_telemetry, where
+      # <project> is the compose project name (the deployment directory name by
+      # default). That is the external name any read-only aggregator must mount.
+      - race_telemetry:/var/lib/carson
+    expose:
+      - "8090"
+    networks:
+      - homelab_default
+    # Resource limits matched to the estate convention for a small FastAPI site.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+
+networks:
+  homelab_default:
+    external: true
+
+volumes:
+  # Owned by THIS stack (not external). Any aggregator that reads this volume
+  # read-only must declare it EXTERNAL and will refuse to start if it is absent, so
+  # the ordering is fixed: bring THIS stack up FIRST (that is what creates the
+  # volume), then redeploy the aggregator.
+  race_telemetry:

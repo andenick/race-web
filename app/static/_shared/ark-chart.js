@@ -86,6 +86,12 @@
     // Universal Graph Contract: legend ALWAYS below — drop any per-figure legend
     // override so the kit default (orientation:h, below the plot) wins everywhere.
     delete lay.legend;
+    // Universal Graph Contract: the title is rendered ONCE, by ArkChart, as HTML in
+    // .ark-chart-head (see spec.title below). A caller that also leaves `title` in its
+    // layout would get a SECOND, in-SVG Plotly title over the same string — the duplicate
+    // -title defect. Strip it here so one chart == one title BY CONSTRUCTION, rather than
+    // relying on every call site to remember `delete layout.title`.
+    delete lay.title;
     if (kind === "log") { lay.yaxis = Object.assign({}, lay.yaxis, { type: "log" }); }
     return lay;
   }

@@ -42,6 +42,10 @@ No "coming soon" placeholders — every page is backed by real data.
 - **Shared site kit** — header/footer chrome, ecosystem switcher, theme toggle,
   oxblood accent (`themes/race.css`), all vendored — no CDN
 - Python 3.12, gunicorn + uvicorn workers
+- **First-party usage telemetry** — `carson-telemetry` ASGI middleware writes one
+  row per request to a local SQLite file. No cookies, no third party, no raw IP:
+  the only client identifier is `sha256(ip + daily-rotating salt)` truncated to 16
+  hex characters, and no user-agent, query string, referrer or cookie is stored.
 
 ## Run locally
 
@@ -50,6 +54,16 @@ pip install -r app/requirements.txt
 cd app && python -m uvicorn main:app --reload --port 8090
 # → http://localhost:8090
 ```
+
+> **`carson-telemetry` is a first-party package, is not on PyPI, and is not
+> distributed in this repository.** `app/requirements.txt` declares it (so the
+> dependency is visible where a reader looks for it) and the `Dockerfile` strips
+> that line and installs the copy from `vendor/carson-telemetry` instead. Without
+> that tree `pip install -r app/requirements.txt` and `import app.main` both fail —
+> **by design**: the import is deliberately unguarded. A `try/except` around it is
+> how a sibling site shipped a telemetry volume that was never written for a month
+> while every check stayed green. To run without it, stub the middleware out
+> locally rather than making the import optional in the committed source.
 
 Or with Docker:
 
@@ -138,6 +152,10 @@ app/
     base.html          shared layout (shared chrome wired in)
     *.html             one template per content route (15 pages)
     _shared/           header.html + footer.html partials
+vendor/
+  carson-telemetry/    first-party usage-telemetry package — NOT distributed in
+                       this repo (see "Run locally" above); pip-installed by the
+                       Dockerfile, which fails the build if it is missing
 build_bundle.py        reproducible data-bundle builder
 Dockerfile             production image (gunicorn + uvicorn workers)
 ```

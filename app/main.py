@@ -22,6 +22,15 @@ from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+# Carson Telemetry Standard §4 (Layer-3 usage events). HARD import, deliberately:
+# no try/except, no "telemetry is optional in dev" guard. StarCruiser wrapped this
+# same import in try/except while its Dockerfile also failed to install the
+# vendored package, and the two defects cancelled each other into silence — the
+# site served traffic uncounted from 2026-06-30 to 2026-07-29 and nobody could
+# tell. A site that cannot answer "is anyone using this?" is the defect; failing
+# loudly at startup is the fix.
+from carson_telemetry import telemetry
+
 from app import chrome  # ASK v1 — shared-chrome context processor
 
 BASE = Path(__file__).resolve().parent
@@ -61,6 +70,33 @@ def _asset_ver(static_dir: Path) -> str:
 
 
 app = FastAPI(title="DuBois - Race, Stratification & Economic Disparities")
+
+# One usage_events row per HTTP request, into the SQLite DB at $CARSON_TELEMETRY_DB on
+# the writable telemetry volume (see docker-compose.yml). Any dashboard over that DB
+# groups by this `service` column, so renaming it orphans the history — keep it "race"
+# (the site key), NOT "race-web" (the container name) and NOT "dubois" (the display
+# title).
+#
+# ONE SERVICE LABEL, deliberately. Sites that generate first-party probe traffic at
+# volume — a 30 s /healthz healthcheck is ~2,880 self-requests/day, and a paint canary
+# can easily out-number real visitors — must tag their own probes under a separate
+# service="<site>-synthetic" label, or the numbers measure the monitoring rather than
+# the audience. This site declares no healthcheck and is not probed by an uptime
+# monitor, so it has no such traffic to separate out and the plain single-label wiring
+# is correct.
+#
+# ⚠ IF A HEALTHCHECK OR AN UPTIME MONITOR IS EVER ADDED TO THIS SITE, ADD THE
+# SYNTHETIC-LABEL SPLIT HERE **FIRST**, in the same change — not after. Probe traffic
+# added before the split exists is not merely noisy, it is unseparable after the fact:
+# the classifier throws the user-agent away by design (privacy contract), so the rows
+# it would have used to tell probes from people no longer carry the evidence. Split
+# first, then probe.
+#
+# NOTE ON UA MARKERS: "curl/" and "wget/" are deliberately NOT treated as synthetic.
+# This site ships /llms.txt and stable bundle URLs precisely to invite programmatic
+# consumers; classifying them as robots would erase the audience those exist to serve.
+# First-party smoke tests DECLARE themselves with a header instead.
+app.add_middleware(telemetry.ASGIMiddleware, service="race")
 
 app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
 templates = Jinja2Templates(

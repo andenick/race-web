@@ -683,7 +683,14 @@ code, kbd, samp, pre { font-family: var(--ark-mono); }
 .ark-chart-controls { display: flex; align-items: center; gap: var(--ark-space-2, 8px); margin-left: auto; }
 .ark-chart-csv { white-space: nowrap; }
 .ark-chart-transform { padding: 2px 8px; }
-.ark-chart { width: 100%; min-height: 320px; }
+/* NOTE: `.ark-chart` itself is declared ONCE, in §9 (PLOTLY CHART CONTAINER) — it owns
+   width/min-height/border/background/padding/flex. A second `.ark-chart` block used to
+   live here with `min-height:320px`; being later in the file it silently won the cascade
+   and shrank every kit chart estate-wide by 120px. ark-plotly.js renders autosize
+   (responsive:true, no layout.height) into this box with a fixed b:44 bottom margin and a
+   responsiveTitle() that raises margin.t to 52-70px, so the plot needs the full 440px of
+   vertical room or the x-axis title clips. Do NOT re-declare `.ark-chart` here; if a
+   surface genuinely needs a shorter chart, add a MODIFIER (e.g. `.ark-chart--compact`). */
 .ark-chart-downloads { margin-top: var(--ark-space-2, 8px); }
 /* never two charts sharing a row */
 .ark-chart-row, .ark-charts { display: block; }
@@ -745,6 +752,10 @@ code, kbd, samp, pre { font-family: var(--ark-mono); }
   /* responsive: 1 column on phones, 2 on wide screens — but each card is a full,
      standalone chart (the per-CARD chart is never split into side-by-side plots). */
   grid-template-columns: 1fr;
+  /* v1.1: cards size to their own content. Without this a media-less deep-link card
+     stretches to the height of the tall figure card beside it and reads as a broken
+     image slot. Chart cards keep their own min-height, so they are unaffected. */
+  align-items: start;
 }
 @media (min-width: 900px) { .ark-gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .ark-gallery-card {
@@ -764,6 +775,25 @@ code, kbd, samp, pre { font-family: var(--ark-mono); }
 .ark-gallery-card-link { color: var(--ark-accent); font-weight: 600; align-self: flex-start; text-decoration: none; }
 .ark-gallery-card-link:hover { text-decoration: underline; }
 .ark-gallery-pending { color: var(--ark-fg-dim); font-style: italic; padding: var(--ark-space-5, 24px) 0; }
+
+/* v1.1 (additive) — two more card kinds for sites whose figures are NOT served
+   from a /api/chart registry: a static-figure card and a deep-link card.
+   `image` cards show the figure itself; deep-link cards deliberately carry no
+   media (a live map/dashboard is linked, never re-embedded inside a card). */
+.ark-gallery-card-kicker {
+  margin: 0 0 var(--ark-space-1, 4px); font-size: var(--ark-text-xs, .78rem);
+  letter-spacing: .06em; text-transform: uppercase; color: var(--ark-fg-dim); font-weight: 600;
+}
+.ark-gallery-card-media {
+  width: 100%; background: var(--ark-bg, #fff); border-radius: var(--ark-radius-sm, 6px);
+  overflow: hidden; border: 1px solid var(--ark-line);
+}
+.ark-gallery-img-link { display: block; }
+.ark-gallery-img { display: block; width: 100%; height: auto; max-width: 100%; }
+/* A media-less deep-link card should not read as a broken image card: it gets a
+   little more breathing room so title + caption + link fill it evenly. */
+.ark-gallery-card--link { padding: var(--ark-space-4, 16px); }
+.ark-gallery-card--link .ark-gallery-card-caption { margin-top: var(--ark-space-2, 8px); }
 
 /* ── §20 ArkTriad — the Research Triad (hero action row) + compact footer form ─
    The Code & Data First layout. Data + Code = PRIMARY (accent fill,

@@ -10,6 +10,19 @@ build/
 .pytest_cache/
 .mypy_cache/
 
+# Editing backups left behind by in-place fixes. These are working-tree scratch,
+# never repository content.
+*.bak
+*.bak-*
+
 # Published data files are distributed separately as a downloadable bundle,
 # not as repository content. See README.md -> Data.
 app/data/
+
+# Telemetry (first-party usage analytics; not bundled in this public repo).
+# The vendored carson-telemetry package is first-party and is pip-installed from
+# vendor/ at image build time, but is NOT distributed here. Keep this rule — without
+# it the next `git add -A` would publish the package into a public repository.
+vendor/
+*.telemetry.db
+telemetry.db
