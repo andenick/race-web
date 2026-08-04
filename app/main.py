@@ -22,13 +22,12 @@ from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-# Carson Telemetry Standard §4 (Layer-3 usage events). HARD import, deliberately:
-# no try/except, no "telemetry is optional in dev" guard. StarCruiser wrapped this
-# same import in try/except while its Dockerfile also failed to install the
-# vendored package, and the two defects cancelled each other into silence — the
-# site served traffic uncounted from 2026-06-30 to 2026-07-29 and nobody could
-# tell. A site that cannot answer "is anyone using this?" is the defect; failing
-# loudly at startup is the fix.
+# Layer-3 usage events. HARD import, deliberately: no try/except, no "telemetry
+# is optional in dev" guard. A guarded import paired with a build that fails to
+# install the package produces two defects that cancel each other into silence,
+# and the site then serves traffic uncounted with nobody able to tell. A site
+# that cannot answer "is anyone using this?" is the defect; failing loudly at
+# startup is the fix.
 from carson_telemetry import telemetry
 
 from app import chrome  # ASK v1 — shared-chrome context processor

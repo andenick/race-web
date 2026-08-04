@@ -100,11 +100,20 @@ the figure is carried through as published.
 
 ### Getting the data
 
-Once the site is live, every published file is downloadable from it — the `/data`
-page lists them with a one-line description each, and each is served from
-`/data/files/{filename}`. Two files the app also needs are deliberately *not*
-offered as downloads (`headlines.json` and `series_registry.json` are internal
-render inputs, not published data), so a clone additionally needs those to boot.
+Every published file is downloadable from the live site: the
+[`/data`](https://race.heterodata.org/data) page lists them with a one-line
+description each, and each is served from
+`https://race.heterodata.org/data/files/{filename}`.
+
+**[`DATA_MANIFEST.md`](DATA_MANIFEST.md) is the complete list** — all 22
+published files with their download URLs and the SHA-256 of the exact bytes the
+site serves, plus a copy-paste shell loop that fetches them all into `app/data/`.
+
+Two files the app also needs are deliberately *not* offered as downloads
+(`headlines.json` and `series_registry.json` are render inputs, not published
+data), so a fresh clone still cannot boot the application from downloads alone.
+The 22 published files are the dataset; the two render inputs only drive this
+particular front end.
 
 `build_bundle.py` rebuilds a reproducible zip of the published CSVs plus the data
 dictionary and citation record from whatever is in `app/data/`:
@@ -130,8 +139,7 @@ Every page is also checked for real data (no placeholders), for working offline
 with no CDN, for legible charts at every viewport width, and for rendering no
 literal markdown.
 
-**Not yet deployed.** `race.heterodata.org` does not resolve yet; routing and the
-public hostname are still pending.
+**Live at [race.heterodata.org](https://race.heterodata.org).**
 
 ## Project layout
 
