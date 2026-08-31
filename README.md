@@ -105,6 +105,14 @@ Every published file is downloadable from the live site: the
 description each, and each is served from
 `https://race.heterodata.org/data/files/{filename}`.
 
+**Reproduce the dataset from source**: the [`anu/`](anu/) directory is a
+self-contained replication package (27 series, loaders → processors →
+validators) that rebuilds every published CSV from the original public
+sources — Federal Reserve SCF, Census ACS/ABS/CPS, BLS via FRED, BJS, IRS
+SOI, SlaveVoyages, Opportunity Atlas, UNDP, and the World Bank. See
+[`anu/README.md`](anu/README.md); `make all` inside `anu/` runs the full
+pipeline.
+
 **[`DATA_MANIFEST.md`](DATA_MANIFEST.md) is the complete list** — all 22
 published files with their download URLs and the SHA-256 of the exact bytes the
 site serves, plus a copy-paste shell loop that fetches them all into `app/data/`.
