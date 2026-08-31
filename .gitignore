@@ -26,3 +26,9 @@ app/data/
 vendor/
 *.telemetry.db
 telemetry.db
+
+# Anu replication package: fetched and generated data never ships; scripts,
+# registry, and DPRs reproduce it from public sources.
+anu/data/raw/
+anu/data/processed/
+anu/data/final/

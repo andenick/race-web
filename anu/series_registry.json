@@ -1,0 +1,1271 @@
+{
+  "schema_version": "1.0",
+  "project": "race",
+  "project_alias": "DuBois",
+  "namesake": "W.E.B. Du Bois (1868-1963)",
+  "domain": "Race, stratification & economic disparities in the United States",
+  "generated_at": "2026-08-31",
+  "source_registry": "Adapted from the DuBois project registry (0.1.0, 2026-07-27) for the public Anu replication package.",
+  "series": [
+    {
+      "series_id": "D1001",
+      "title": "US Total Population",
+      "description": "Annual US resident population, 1790-2024. The demographic backbone for per-capita and share calculations across panels.",
+      "source": {
+        "name": "MeasuringWorth (Samuel H. Williamson, 'What Was the U.S. GDP Then?'), population column",
+        "url": "https://www.measuringworth.com/datasets/usgdp/",
+        "retrieved": "2026-07-27",
+        "license": "Free for research use; cite Williamson (see site terms)"
+      },
+      "construction": {
+        "method": "Annual population column extracted from the MeasuringWorth USGDP dataset (manual CSV download); decennial values cross-validated against Census HSUS 1975 Series A 1-8 as-enumerated values (agreement >= 99.5%).",
+        "scripts": [
+          "L11_fetch_measuringworth.py",
+          "L10_fetch_hsus.py",
+          "P10_construct_demographics.py"
+        ],
+        "transformations": [
+          "manual_download",
+          "csv_extraction",
+          "hsus_crosscheck"
+        ]
+      },
+      "units": "persons",
+      "frequency": "annual",
+      "coverage": {
+        "start": "1790",
+        "end": "2024"
+      },
+      "content_type": "time_series",
+      "construction_class": "direct",
+      "panel": "P10_Demographics",
+      "publish": true,
+      "output": [
+        "demographics_population.csv"
+      ],
+      "validation": {
+        "file": "demographics_population.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "total_population"
+        ],
+        "positive": [
+          "total_population"
+        ]
+      }
+    },
+    {
+      "series_id": "D1002",
+      "title": "US Population by Race (shares)",
+      "description": "Population counts and percentage shares by race (B02001 'alone' universe) with a separate Hispanic cross-tab (B03002), 2005-2022.",
+      "source": {
+        "name": "US Census Bureau, ACS 1-Year Estimates (B02001, B03002) via Census API",
+        "url": "https://api.census.gov/data/{year}/acs/acs1",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "API pull of national race counts; shares computed as category/total x 100 per year. Race is 'alone' universe; Hispanic reported as separate ethnicity, never merged into race.",
+        "scripts": [
+          "L12_fetch_census_race_demo.py",
+          "P10_construct_demographics.py"
+        ],
+        "transformations": [
+          "api_pull",
+          "share_computation"
+        ]
+      },
+      "units": "percent of total (counts included)",
+      "frequency": "annual",
+      "coverage": {
+        "start": "2005",
+        "end": "2022"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P10_Demographics",
+      "publish": true,
+      "output": [
+        "demographics_race_shares.csv"
+      ],
+      "validation": {
+        "file": "demographics_race_shares.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "total",
+          "black_aa_alone_pct"
+        ],
+        "range_0_100": [
+          "black_aa_alone_pct",
+          "white_alone_pct",
+          "asian_alone_pct"
+        ]
+      }
+    },
+    {
+      "series_id": "D1003",
+      "title": "Median Net Worth by Race",
+      "description": "Weighted median (and mean) household net worth by race, from all 12 triennial SCF waves 1989-2022. The site's headline wealth panel.",
+      "source": {
+        "name": "Federal Reserve, Survey of Consumer Finances (SCF) summary microdata files, 12 waves",
+        "url": "https://www.federalreserve.gov/econres/scfindex.htm",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Federal Reserve)"
+      },
+      "construction": {
+        "method": "Sample-weighted (WGT) medians/means per race per wave over all five implicates. Race coding harmonized across waves (Asian reported only for 2022; not back-imputed).",
+        "scripts": [
+          "L01_fetch_fed_scf.py",
+          "P01_construct_wealth.py"
+        ],
+        "transformations": [
+          "zip_download",
+          "weighted_median",
+          "race_harmonization"
+        ]
+      },
+      "units": "US dollars, current (nominal) per survey wave",
+      "frequency": "triennial",
+      "coverage": {
+        "start": "1989",
+        "end": "2022"
+      },
+      "content_type": "time_series",
+      "construction_class": "direct",
+      "panel": "P1_Wealth",
+      "publish": true,
+      "output": [
+        "wealth_by_race_timeseries.csv",
+        "wealth_by_race_2022.csv"
+      ],
+      "validation": {
+        "file": "wealth_by_race_timeseries.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "median_networth",
+          "race"
+        ]
+      }
+    },
+    {
+      "series_id": "D1004",
+      "title": "Black Wealth as % of White",
+      "description": "Black and Hispanic median net worth as a percent of White median net worth, per SCF wave 1989-2022, with dollar gaps.",
+      "source": {
+        "name": "Derived from Federal Reserve SCF (see D1003)",
+        "url": "https://www.federalreserve.gov/econres/scfindex.htm",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Federal Reserve)"
+      },
+      "construction": {
+        "method": "Ratio of weighted medians per wave (black_median/white_median x 100); gap = white - black. Computed per wave from microdata, never spliced from growth rates.",
+        "scripts": [
+          "L01_fetch_fed_scf.py",
+          "P01_construct_wealth.py"
+        ],
+        "transformations": [
+          "weighted_median",
+          "ratio_computation"
+        ]
+      },
+      "units": "percent",
+      "frequency": "triennial",
+      "coverage": {
+        "start": "1989",
+        "end": "2022"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P1_Wealth",
+      "publish": true,
+      "output": [
+        "wealth_gap_timeseries.csv",
+        "wealth_gap_summary_2022.csv"
+      ],
+      "validation": {
+        "file": "wealth_gap_timeseries.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "black_pct_of_white"
+        ],
+        "range_open_35": [
+          "black_pct_of_white"
+        ]
+      },
+      "quality": {
+        "status": "verified",
+        "notes": "1989 value (6.0%) verified as a genuine early-SCF small-sample/race-coding artifact, not a pipeline bug; excluded from trend claims (cite 1992-2022)."
+      }
+    },
+    {
+      "series_id": "D1005",
+      "title": "Unemployment Rate by Race",
+      "description": "Annual average unemployment rates by race (White 1954+, Black 1972+, Hispanic 1973+, Asian 2000+), from monthly CPS series.",
+      "source": {
+        "name": "BLS Current Population Survey via FRED (LNS14000003, LNS14000006, LNS14000009, LNS14032183)",
+        "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=LNS14000006",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "Keyless FRED CSV download of the four monthly SA series; annual averages computed in P03. Pre-1972 Black / pre-1973 Hispanic / pre-2000 Asian coverage is absent (not collected), never back-imputed.",
+        "scripts": [
+          "L03_fetch_fred_unemployment.py",
+          "P03_construct_employment.py"
+        ],
+        "transformations": [
+          "csv_download",
+          "annual_averaging"
+        ]
+      },
+      "units": "percent (SA, annual average)",
+      "frequency": "annual (monthly underlying)",
+      "coverage": {
+        "start": "1954",
+        "end": "2025"
+      },
+      "content_type": "time_series",
+      "construction_class": "direct",
+      "panel": "P3_Employment",
+      "publish": true,
+      "output": [
+        "unemployment_annual.csv",
+        "unemployment_recession_peaks.csv"
+      ],
+      "validation": {
+        "file": "unemployment_annual.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "unemployment_rate",
+          "race"
+        ],
+        "range_open_30": [
+          "unemployment_rate"
+        ]
+      }
+    },
+    {
+      "series_id": "D1006",
+      "title": "Black/White Unemployment Ratio",
+      "description": "Black unemployment rate relative to White, annually 1972-2025. Documents the persistent ~2x multiplier.",
+      "source": {
+        "name": "Derived from BLS CPS via FRED (see D1005)",
+        "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=LNS14000006",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "Ratio of annual averages (Black/White); recession-episode peaks identified against NBER peak-trough dates.",
+        "scripts": [
+          "L03_fetch_fred_unemployment.py",
+          "P03_construct_employment.py"
+        ],
+        "transformations": [
+          "annual_averaging",
+          "ratio_computation",
+          "nber_episode_peaks"
+        ]
+      },
+      "units": "ratio",
+      "frequency": "annual",
+      "coverage": {
+        "start": "1972",
+        "end": "2025"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P3_Employment",
+      "publish": true,
+      "output": [
+        "unemployment_ratio.csv"
+      ],
+      "validation": {
+        "file": "unemployment_ratio.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "black_white_ratio"
+        ],
+        "range_1_3_5": [
+          "black_white_ratio"
+        ]
+      }
+    },
+    {
+      "series_id": "D1007",
+      "title": "Median Household Income by Race",
+      "description": "Median household income by race, ACS 1-Year 2005-2022, nominal and deflated to 2022 dollars with CPI-U.",
+      "source": {
+        "name": "US Census Bureau, ACS 1-Year B19013 (+A/B/C/D/H/I race iterations) via Census API; CPI-U (CPIAUCSL) via FRED",
+        "url": "https://api.census.gov/data/{year}/acs/acs1",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "API pull per year/race; real values = nominal x (CPI_2022 / CPI_year) using annual-average CPIAUCSL. 2020 absent (ACS 1-year cancelled, COVID); not imputed.",
+        "scripts": [
+          "L02_fetch_census_income_poverty.py",
+          "L04_fetch_fred_cpi.py",
+          "P02_construct_income_poverty.py"
+        ],
+        "transformations": [
+          "api_pull",
+          "cpi_deflation_2022_base",
+          "ratio_computation"
+        ]
+      },
+      "units": "current USD and 2022 USD (real)",
+      "frequency": "annual",
+      "coverage": {
+        "start": "2005",
+        "end": "2022"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P2_Income",
+      "publish": true,
+      "output": [
+        "income_ratio.csv"
+      ],
+      "validation": {
+        "file": "income_ratio.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "black_white_ratio"
+        ],
+        "range_0_4_0_8": [
+          "black_white_ratio"
+        ]
+      },
+      "quality": {
+        "status": "verified",
+        "notes": "2020 gap documented; Black/White ratio ~0.6 throughout."
+      }
+    },
+    {
+      "series_id": "D1008",
+      "title": "Poverty Rate by Race",
+      "description": "Share of population below poverty by race (B17001), with Black/White and Hispanic/White gaps and ratios, 2005-2022.",
+      "source": {
+        "name": "US Census Bureau, ACS 1-Year B17001 (+race iterations) via Census API",
+        "url": "https://api.census.gov/data/{year}/acs/acs1",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "poverty_rate = B17001{su}_002E / B17001{su}_001E per year and race; gaps in percentage points, ratios of rates.",
+        "scripts": [
+          "L02_fetch_census_income_poverty.py",
+          "P02_construct_income_poverty.py"
+        ],
+        "transformations": [
+          "api_pull",
+          "rate_from_counts",
+          "gap_computation"
+        ]
+      },
+      "units": "percent",
+      "frequency": "annual",
+      "coverage": {
+        "start": "2005",
+        "end": "2022"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P4_Poverty",
+      "publish": true,
+      "output": [
+        "poverty_gap.csv"
+      ],
+      "validation": {
+        "file": "poverty_gap.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "black_white_poverty_ratio"
+        ],
+        "range_1_5_3": [
+          "black_white_poverty_ratio"
+        ]
+      }
+    },
+    {
+      "series_id": "D1009",
+      "title": "Bachelor's+ Attainment by Race",
+      "description": "Share of population 25+ with a bachelor's degree or higher by race (C15002), with Black/White gaps and ratios.",
+      "source": {
+        "name": "US Census Bureau, ACS 1-Year C15002 (+race iterations) via Census API",
+        "url": "https://api.census.gov/data/{year}/acs/acs1",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "bachelor's+ = pre-summed degree columns per sex in the C15002 race iterations (_006E male + _011E female) / total 25+ (_001E).",
+        "scripts": [
+          "L06_fetch_census_education.py",
+          "P06_construct_education.py"
+        ],
+        "transformations": [
+          "api_pull",
+          "rate_from_counts",
+          "gap_computation"
+        ]
+      },
+      "units": "percent of population 25+",
+      "frequency": "annual",
+      "coverage": {
+        "start": "2006",
+        "end": "2022"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P6_Education",
+      "publish": true,
+      "output": [
+        "education_attainment_gap.csv"
+      ],
+      "validation": {
+        "file": "education_attainment_gap.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "black_white_ratio"
+        ],
+        "range_0_1": [
+          "black_white_ratio"
+        ]
+      }
+    },
+    {
+      "series_id": "D1010",
+      "title": "Homeownership Rate by Race",
+      "description": "Owner-occupied share of occupied housing units by race of householder (B25003), with Black/White and Hispanic/White gaps.",
+      "source": {
+        "name": "US Census Bureau, ACS 1-Year B25003 (+race iterations) via Census API",
+        "url": "https://api.census.gov/data/{year}/acs/acs1",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "homeownership_rate = B25003{su}_002E (owner-occupied) / B25003{su}_001E (total occupied) x 100.",
+        "scripts": [
+          "L05_fetch_census_housing.py",
+          "P05_construct_housing.py"
+        ],
+        "transformations": [
+          "api_pull",
+          "rate_from_counts",
+          "gap_computation"
+        ]
+      },
+      "units": "percent",
+      "frequency": "annual",
+      "coverage": {
+        "start": "2005",
+        "end": "2022"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P5_Housing",
+      "publish": true,
+      "output": [
+        "housing_ownership_gap.csv"
+      ],
+      "validation": {
+        "file": "housing_ownership_gap.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "black_white_gap_pp"
+        ],
+        "range_0_100": [
+          "white_rate",
+          "black_rate"
+        ]
+      }
+    },
+    {
+      "series_id": "D1011",
+      "title": "Imprisonment Rate by Race",
+      "description": "Sentenced prisoners per 100,000 US residents by race/ethnicity, 2010-2020, from BJS Prisoners in 2020 Figure 2. The widest measured disparity: Black rate ~5-6x White.",
+      "source": {
+        "name": "Bureau of Justice Statistics, Prisoners in 2020 (NCJ 302776), Fig. 2 (E. Ann Carson, 2021)",
+        "url": "https://bjs.ojp.gov/content/pub/sheets/p20st.zip",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "Download the p20st spreadsheet bundle, extract p20stf02.csv (Figure 2 data), parse year rows into per-race rates; ratio = Black/White.",
+        "scripts": [
+          "L08_fetch_bjs_prisoners.py",
+          "P08_construct_imprisonment.py"
+        ],
+        "transformations": [
+          "zip_download",
+          "table_parse",
+          "ratio_computation"
+        ]
+      },
+      "units": "prisoners per 100,000 residents",
+      "frequency": "annual",
+      "coverage": {
+        "start": "2010",
+        "end": "2020"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P8_CriminalJustice",
+      "publish": true,
+      "output": [
+        "imprisonment_by_race.csv"
+      ],
+      "validation": {
+        "file": "imprisonment_by_race.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "black_white_ratio"
+        ],
+        "range_3_8": [
+          "black_white_ratio"
+        ]
+      }
+    },
+    {
+      "series_id": "D1012",
+      "title": "Employer Firms by Owner Race",
+      "description": "Employer firms, employees, and annual payroll by owner race from the Annual Business Survey Company Summary, 2018-2021.",
+      "source": {
+        "name": "US Census Bureau, Annual Business Survey (ABS) Company Summary via Census API",
+        "url": "https://api.census.gov/data/{year}/abscs",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "API pull of FIRMPDEMP/EMP/PAYANN by RACE_GROUP (30=White, 40=Black, 50=AIAN, 60=Asian, 70=NHPI, 91=Hispanic); share of firms vs RACE_GROUP=00 total. Race groups overlap Hispanic ethnicity, so shares legitimately sum to ~97-99%.",
+        "scripts": [
+          "L09_fetch_census_abs.py",
+          "P09_construct_business.py"
+        ],
+        "transformations": [
+          "api_pull",
+          "share_computation"
+        ]
+      },
+      "units": "count (firms); percent for shares",
+      "frequency": "annual",
+      "coverage": {
+        "start": "2018",
+        "end": "2021"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P9_Business",
+      "publish": true,
+      "output": [
+        "business_ownership_by_race.csv"
+      ],
+      "validation": {
+        "file": "business_ownership_by_race.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "share_of_firms_pct"
+        ],
+        "range_0_100": [
+          "share_of_firms_pct"
+        ]
+      }
+    },
+    {
+      "series_id": "D1013",
+      "title": "Median Income by Race by Metro (cross-section)",
+      "description": "2022 median household income for White (B19013A) and Black (B19013B) households by metro/micropolitan area, with gaps and ratios.",
+      "source": {
+        "name": "US Census Bureau, ACS 1-Year 2022 B19013A/B by metro area via Census API",
+        "url": "https://api.census.gov/data/2022/acs/acs1",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "API pull for all metro/micropolitan geographies for both race iterations; join on geography; keep metros reporting both; compute Black/White ratio and dollar gap; sort by gap.",
+        "scripts": [
+          "L13_fetch_census_metro.py",
+          "P13_construct_metro.py"
+        ],
+        "transformations": [
+          "api_pull",
+          "join_by_geography",
+          "gap_computation"
+        ]
+      },
+      "units": "current USD",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "2022",
+        "end": "2022"
+      },
+      "content_type": "cross_sectional",
+      "construction_class": "formula",
+      "panel": "P13_Geographic",
+      "publish": true,
+      "output": [
+        "metro_income_gap_2022.csv"
+      ],
+      "validation": {
+        "file": "metro_income_gap_2022.csv",
+        "required_non_null": [
+          "gap_dollars",
+          "black_white_ratio"
+        ],
+        "range_0_3": [
+          "black_white_ratio"
+        ]
+      },
+      "quality": {
+        "status": "verified",
+        "notes": "Some small metros show Black median income above White (ratio > 1); real ACS estimates, retained."
+      }
+    },
+    {
+      "series_id": "D1014",
+      "title": "Trans-Atlantic Slave Trade: Annual Embarked/Disembarked",
+      "description": "Annual slaves embarked and disembarked in the trans-Atlantic trade, 1514-1866, total and mainland North America, from 36,108 voyages.",
+      "source": {
+        "name": "SlaveVoyages.org, Trans-Atlantic Slave Trade Database (2019 release, tastdb-exp-2019)",
+        "url": "https://www.slavevoyages.org/Downloads/tastdb-exp-2019.csv",
+        "retrieved": "2026-07-27",
+        "license": "CC-BY (SlaveVoyages)"
+      },
+      "construction": {
+        "method": "Voyage-level sums of imputed embarked (SLAXIMP) and disembarked (SLAMIMP) by year of arrival (YEARAM); North America = REGARR 20000-29999. Regional cumulative totals by broad arrival region.",
+        "scripts": [
+          "L12b_fetch_slavevoyages.py",
+          "P12_construct_slavetrade.py"
+        ],
+        "transformations": [
+          "csv_download",
+          "annual_aggregation",
+          "region_classification"
+        ]
+      },
+      "units": "persons",
+      "frequency": "annual",
+      "coverage": {
+        "start": "1514",
+        "end": "1866"
+      },
+      "content_type": "time_series",
+      "construction_class": "direct",
+      "panel": "P12_Historical",
+      "publish": true,
+      "output": [
+        "slavetrade_annual.csv",
+        "slavetrade_by_region.csv",
+        "slavetrade_summary.csv"
+      ],
+      "validation": {
+        "file": "slavetrade_annual.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "disembarked_total"
+        ],
+        "positive": [
+          "disembarked_total"
+        ]
+      }
+    },
+    {
+      "series_id": "D1015",
+      "title": "Middle-Passage Mortality",
+      "description": "Middle-passage mortality: (embarked - disembarked) per year and as a percent of embarked, 1514-1866.",
+      "source": {
+        "name": "Derived from SlaveVoyages TAST 2019 (see D1014)",
+        "url": "https://www.slavevoyages.org/",
+        "retrieved": "2026-07-27",
+        "license": "CC-BY (SlaveVoyages)"
+      },
+      "construction": {
+        "method": "mortality_total = max(0, embarked_total - disembarked_total) per year; rate = mortality_total/embarked_total x 100.",
+        "scripts": [
+          "L12b_fetch_slavevoyages.py",
+          "P12_construct_slavetrade.py"
+        ],
+        "transformations": [
+          "difference",
+          "rate_computation"
+        ]
+      },
+      "units": "persons; percent for rate",
+      "frequency": "annual",
+      "coverage": {
+        "start": "1514",
+        "end": "1866"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P12_Historical",
+      "publish": true,
+      "output": [
+        "slavetrade_annual.csv"
+      ],
+      "validation": {
+        "file": "slavetrade_annual.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "mortality_rate_pct"
+        ],
+        "range_0_40": [
+          "mortality_rate_pct"
+        ]
+      }
+    },
+    {
+      "series_id": "D1016",
+      "title": "International Inequality Comparison (cross-section)",
+      "description": "2022 snapshot comparing the US with peers on HDI, inequality-adjusted HDI and loss, World Bank Gini, and direct Black/White-type income ratios (US, Brazil, South Africa).",
+      "source": {
+        "name": "UNDP HDR 2023/24 Composite Indices; World Bank Gini (SI.POV.GINI); national statistics agencies (IBGE, StatsSA, US Census)",
+        "url": "https://hdr.undp.org/data-center",
+        "retrieved": "2026-07-27",
+        "license": "CC BY 3.0 IGO (UNDP); CC BY 4.0 (World Bank); national-agency figures cited per row"
+      },
+      "construction": {
+        "method": "Keyless UNDP CSV and World Bank API pulls for 10 countries; national Black/White income ratios added with per-row citations (IBGE, StatsSA, Census).",
+        "scripts": [
+          "L16_fetch_international.py",
+          "P16_construct_international.py"
+        ],
+        "transformations": [
+          "csv_download",
+          "api_pull",
+          "manual_cited_ratios"
+        ]
+      },
+      "units": "index / Gini / ratio (mixed; per-column units)",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "2022",
+        "end": "2022"
+      },
+      "content_type": "cross_sectional",
+      "construction_class": "composite",
+      "panel": "P16_International",
+      "publish": true,
+      "output": [
+        "international_comparison.csv"
+      ],
+      "validation": {
+        "file": "international_comparison.csv",
+        "required_non_null": [
+          "iso3",
+          "worldbank_gini"
+        ],
+        "range_20_70": [
+          "worldbank_gini"
+        ]
+      }
+    },
+    {
+      "series_id": "D1017",
+      "title": "Reparations Estimates Comparison (cross-section)",
+      "description": "Curated comparison of reparations estimates from four distinct methodologies: SCF-static counterfactual, Darity-Mullen, Craemer price- and wage-based, plus CA AB 3121 per-harm schedule.",
+      "source": {
+        "name": "Fed SCF 2022 (computed); Darity & Mullen (2020); Craemer et al. (2020); CA AB 3121 Task Force (2023)",
+        "url": "https://oag.ca.gov/ab3121/report",
+        "retrieved": "2026-07-27",
+        "license": "Published literature; per-row URLs in output"
+      },
+      "construction": {
+        "method": "Curated table of published estimates (each labeled with methodology, base year, and source URL) alongside this project's SCF-static counterfactual (P31). Not a policy prescription.",
+        "scripts": [
+          "P14_construct_reparations.py"
+        ],
+        "transformations": [
+          "curated_published_estimates"
+        ]
+      },
+      "units": "trillion USD",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "2018",
+        "end": "2022"
+      },
+      "content_type": "cross_sectional",
+      "construction_class": "composite",
+      "panel": "P14_Reparations",
+      "publish": true,
+      "output": [
+        "reparations_comparison.csv",
+        "reparations_ca_taskforce_by_harm.csv"
+      ],
+      "validation": {
+        "file": "reparations_comparison.csv",
+        "required_non_null": [
+          "amount_low_trillion_usd"
+        ],
+        "positive": [
+          "amount_low_trillion_usd"
+        ]
+      }
+    },
+    {
+      "series_id": "D1018",
+      "title": "Voter Turnout by Race (CPS Voting Supplement)",
+      "description": "Weighted voter turnout by race for biennial election years 2010-2022, from CPS Voting and Registration supplement microdata.",
+      "source": {
+        "name": "US Census Bureau, CPS Voting and Registration Supplement via Census API",
+        "url": "https://api.census.gov/data/{year}/cps/voting/nov",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "Individual-level CPS microdata (PES1 voted, PTDTRACE race, PWCMPWGT weight, for=state:*); turnout = weighted share of PES1 in {1,2} answering 1, by race group. REQUIRES a Census API key (free).",
+        "scripts": [
+          "L17_fetch_cps_voting.py",
+          "P17_construct_political.py"
+        ],
+        "transformations": [
+          "api_pull_microdata",
+          "weighted_aggregation"
+        ]
+      },
+      "units": "percent",
+      "frequency": "biennial",
+      "coverage": {
+        "start": "2010",
+        "end": "2022"
+      },
+      "content_type": "time_series",
+      "construction_class": "formula",
+      "panel": "P17_Political",
+      "publish": true,
+      "output": [
+        "political_turnout_gap.csv"
+      ],
+      "validation": {
+        "file": "political_turnout_gap.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "Black_turnout_pct",
+          "White_turnout_pct"
+        ],
+        "range_0_100": [
+          "Black_turnout_pct",
+          "White_turnout_pct"
+        ]
+      },
+      "quality": {
+        "status": "verified",
+        "notes": "CPS self-report inflates turnout levels ~5-10pp vs ballot counts; the racial GAP is the analytically meaningful metric. 2012 milestone: Black turnout (77.9%) exceeded White (70.8%)."
+      }
+    },
+    {
+      "series_id": "D1019",
+      "title": "Intergenerational Mobility by Race (Opportunity Atlas)",
+      "description": "Mean adult family-income percentile (kfr) of children born 1978-1992 by race and parental income percentile (p25/p75/p100), with Black-White gaps and ratios.",
+      "source": {
+        "name": "Opportunity Insights / Opportunity Atlas, Table 5: national estimates by cohort (Chetty, Hendren, Jones, Porter 2018, QJE 133(2))",
+        "url": "https://www2.census.gov/ces/opportunity/national_estimates_by_cohort_primary_outcomes.csv",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Census Bureau)"
+      },
+      "construction": {
+        "method": "Extract kfr_{race}_pooled_pXX columns for the three parent percentiles; gap and ratio Black vs White per cohort.",
+        "scripts": [
+          "L14_fetch_opportunity_atlas.py",
+          "P11_construct_mobility.py"
+        ],
+        "transformations": [
+          "csv_download",
+          "column_extraction",
+          "gap_computation"
+        ]
+      },
+      "units": "income percentile rank",
+      "frequency": "annual (birth cohorts)",
+      "coverage": {
+        "start": "1978",
+        "end": "1992"
+      },
+      "content_type": "time_series",
+      "construction_class": "direct",
+      "panel": "P11_Mobility",
+      "publish": true,
+      "output": [
+        "mobility_gap_by_race.csv"
+      ],
+      "validation": {
+        "file": "mobility_gap_by_race.csv",
+        "year_column": "cohort",
+        "required_non_null": [
+          "black_white_gap_p25_pp"
+        ],
+        "range_0_30": [
+          "black_white_gap_p25_pp"
+        ]
+      }
+    },
+    {
+      "series_id": "D1020",
+      "title": "Federal Income Tax by AGI Bracket (cross-section)",
+      "description": "IRS Statistics of Income Table 1.4 (tax year 2021): returns, AGI, and income tax by AGI bracket, with effective rates.",
+      "source": {
+        "name": "IRS Statistics of Income, Table 1.4 (All Returns by Size of AGI), Tax Year 2021",
+        "url": "https://www.irs.gov/pub/irs-soi/21in14ar.xls",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "Keyless download of the published .xls; parse bracket rows (returns, AGI, taxable income, tax); effective_rate = tax/AGI per bracket. REAL IRS data, no imputation.",
+        "scripts": [
+          "L18_fetch_irs_soi.py",
+          "P18_construct_taxation.py"
+        ],
+        "transformations": [
+          "xls_download",
+          "table_parse",
+          "rate_computation"
+        ]
+      },
+      "units": "thousands USD (amounts); percent (rates)",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "2021",
+        "end": "2021"
+      },
+      "content_type": "cross_sectional",
+      "construction_class": "direct",
+      "panel": "P18_Taxation",
+      "publish": true,
+      "output": [
+        "taxation_by_agi_bracket.csv"
+      ],
+      "validation": {
+        "file": "taxation_by_agi_bracket.csv",
+        "required_non_null": [
+          "effective_rate_pct"
+        ],
+        "range_0_50": [
+          "effective_rate_pct"
+        ]
+      }
+    },
+    {
+      "series_id": "D1021",
+      "title": "Federal Tax Burden by Imputed Race (derived)",
+      "description": "Effective federal income-tax rates by imputed race: IRS SOI brackets with racial composition imputed from ACS household income distributions (B19001A/B).",
+      "source": {
+        "name": "IRS SOI Table 1.4 (2021) + Census ACS 2022 B19001A/B via Census API",
+        "url": "https://api.census.gov/data/2022/acs/acs1",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "For each AGI bracket, racial composition of households estimated from ACS B19001A/B income distributions and applied to IRS bracket tax amounts (standard demographic imputation as used by TPC/ITEP).",
+        "scripts": [
+          "L18_fetch_irs_soi.py",
+          "P18_construct_taxation.py"
+        ],
+        "transformations": [
+          "bracket_alignment",
+          "racial_imputation",
+          "rate_computation"
+        ]
+      },
+      "units": "thousands USD (amounts); percent (rates)",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "2021",
+        "end": "2021"
+      },
+      "content_type": "derived",
+      "construction_class": "composite",
+      "panel": "P18_Taxation",
+      "publish": true,
+      "output": [
+        "taxation_imputed_by_race.csv",
+        "taxation_imputed_by_bracket.csv"
+      ],
+      "validation": {
+        "file": "taxation_imputed_by_race.csv",
+        "required_non_null": [
+          "imputed_effective_rate_pct"
+        ],
+        "range_0_50": [
+          "imputed_effective_rate_pct"
+        ]
+      },
+      "quality": {
+        "status": "known_issues",
+        "notes": "RACE IS IMPUTED: the IRS does not collect race. Households != tax returns; within-bracket composition assumed uniform. Effective-rate differences reflect the progressive code plus the racial income distribution, NOT differential treatment."
+      }
+    },
+    {
+      "series_id": "D2001",
+      "title": "Black-White Wealth-Gap Decomposition (Oaxaca-Blinder)",
+      "description": "Oaxaca-Blinder decomposition of the 2022 Black-White median wealth gap on SCF microdata: explained vs unexplained shares and driver composition.",
+      "source": {
+        "name": "Fed SCF 2022 microdata (see D1003)",
+        "url": "https://www.federalreserve.gov/econres/scfindex.htm",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Federal Reserve)"
+      },
+      "construction": {
+        "method": "Oaxaca-Blinder on log net worth, White reference group, covariates (income, education, age, marital status, kids, labor force, homeowner); all five implicates weighted by WGT.",
+        "scripts": [
+          "L01_fetch_fed_scf.py",
+          "P21_decompose_wealth.py"
+        ],
+        "transformations": [
+          "weighted_ols",
+          "oaxaca_blinder"
+        ]
+      },
+      "units": "percent of gap (log-points)",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "2022",
+        "end": "2022"
+      },
+      "content_type": "derived",
+      "construction_class": "formula",
+      "panel": "P1_Wealth",
+      "publish": true,
+      "output": [
+        "wealth_gap_decomposition.csv",
+        "wealth_asset_composition.csv"
+      ],
+      "validation": {
+        "file": "wealth_gap_decomposition.csv",
+        "required_non_null": [
+          "value"
+        ]
+      },
+      "quality": {
+        "status": "verified",
+        "notes": "~65% explained / 35% unexplained (log); leading explained drivers homeownership, education, age; income ~2%. Decomposition identities exact (residual=0)."
+      }
+    },
+    {
+      "series_id": "D2002",
+      "title": "Black-White Income-Gap Decomposition (explained share)",
+      "description": "Oaxaca-Blinder decomposition of the 2022 Black-White household income gap on SCF microdata.",
+      "source": {
+        "name": "Fed SCF 2022 microdata (see D1003)",
+        "url": "https://www.federalreserve.gov/econres/scfindex.htm",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Federal Reserve)"
+      },
+      "construction": {
+        "method": "Oaxaca-Blinder on log household income, White reference, human-capital + demographic covariates; weighted by WGT.",
+        "scripts": [
+          "L01_fetch_fed_scf.py",
+          "P22_decompose_income.py"
+        ],
+        "transformations": [
+          "weighted_ols",
+          "oaxaca_blinder"
+        ]
+      },
+      "units": "percent of gap (log-points)",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "2022",
+        "end": "2022"
+      },
+      "content_type": "derived",
+      "construction_class": "formula",
+      "panel": "P2_Income",
+      "publish": true,
+      "output": [
+        "income_decomposition.csv"
+      ],
+      "validation": {
+        "file": "income_decomposition.csv",
+        "required_non_null": [
+          "value"
+        ]
+      },
+      "quality": {
+        "status": "verified",
+        "notes": "~53% explained / 47% unexplained (log income). 'Unexplained' means unexplained conditional on included covariates -- it is NOT synonymous with discrimination."
+      }
+    },
+    {
+      "series_id": "D2003",
+      "title": "Black-White Homeownership-Gap Decomposition (LPM)",
+      "description": "Oaxaca-Blinder on a linear probability model of homeownership (SCF 2022): explained share of the ~44-point Black-White homeownership gap.",
+      "source": {
+        "name": "Fed SCF 2022 microdata (see D1003)",
+        "url": "https://www.federalreserve.gov/econres/scfindex.htm",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Federal Reserve)"
+      },
+      "construction": {
+        "method": "LPM-Oaxaca-Blinder with homeowner indicator (HOUSECL==1); shares reported in percentage points of the gap.",
+        "scripts": [
+          "L01_fetch_fed_scf.py",
+          "P24_decompose_homeownership.py"
+        ],
+        "transformations": [
+          "weighted_lpm",
+          "oaxaca_blinder"
+        ]
+      },
+      "units": "percentage points of gap",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "2022",
+        "end": "2022"
+      },
+      "content_type": "derived",
+      "construction_class": "formula",
+      "panel": "P5_Housing",
+      "publish": true,
+      "output": [
+        "homeownership_decomposition.csv"
+      ],
+      "validation": {
+        "file": "homeownership_decomposition.csv",
+        "required_non_null": [
+          "value_pp"
+        ]
+      },
+      "quality": {
+        "status": "verified",
+        "notes": "~44% explained / 56% unexplained; the unexplained residual maps to credit access, segregation, and down-payment constraints not observed in SCF."
+      }
+    },
+    {
+      "series_id": "D2004",
+      "title": "Black/White Unemployment Cyclical Beta",
+      "description": "OLS of Black unemployment on White unemployment (annual, 1972-2025): level beta, ratio slope, and recession-vs-expansion means. Shows the ~2x gap is a CONSTANT multiplier, not recession-widening.",
+      "source": {
+        "name": "Derived from BLS CPS via FRED (see D1005)",
+        "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=LNS14000006",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government)"
+      },
+      "construction": {
+        "method": "u_B = a + b*u_W (OLS, level) plus ratio-series slope regression; COVID beta-shift computed with/without 2020.",
+        "scripts": [
+          "L03_fetch_fred_unemployment.py",
+          "P03_construct_employment.py",
+          "P23_decompose_employment.py"
+        ],
+        "transformations": [
+          "annual_averaging",
+          "ols"
+        ]
+      },
+      "units": "elasticity (level)",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "1972",
+        "end": "2025"
+      },
+      "content_type": "derived",
+      "construction_class": "formula",
+      "panel": "P3_Employment",
+      "publish": true,
+      "output": [
+        "employment_cyclical_decomposition.csv"
+      ],
+      "validation": {
+        "file": "employment_cyclical_decomposition.csv",
+        "required_non_null": [
+          "level_beta"
+        ],
+        "range_1_3": [
+          "level_beta"
+        ]
+      }
+    },
+    {
+      "series_id": "D2005",
+      "title": "Reparations: Aggregate Black-White Wealth Shortfall",
+      "description": "SCF-static counterfactual: the dollar amount that would close today's observed Black-White wealth gap (median and mean basis), 2022.",
+      "source": {
+        "name": "Fed SCF 2022 microdata (see D1003)",
+        "url": "https://www.federalreserve.gov/econres/scfindex.htm",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Federal Reserve)"
+      },
+      "construction": {
+        "method": "gap x Black households: (White median - Black median) x Black household count (weighted), and the mean-basis variant. Compare Darity-Mullen (a different, historical-compounding counterfactual) in D1017.",
+        "scripts": [
+          "L01_fetch_fed_scf.py",
+          "P31_counterfactual_reparations.py"
+        ],
+        "transformations": [
+          "weighted_medians",
+          "counterfactual_multiplication"
+        ]
+      },
+      "units": "2022 USD (trillions reported)",
+      "frequency": "irregular",
+      "coverage": {
+        "start": "2022",
+        "end": "2022"
+      },
+      "content_type": "derived",
+      "construction_class": "formula",
+      "panel": "P14_Reparations",
+      "publish": true,
+      "output": [
+        "reparations_counterfactual.csv"
+      ],
+      "validation": {
+        "file": "reparations_counterfactual.csv",
+        "required_non_null": [
+          "value"
+        ],
+        "positive": [
+          "value"
+        ]
+      }
+    },
+    {
+      "series_id": "D2006",
+      "title": "Incarceration Disparity-Attributable Annual Cost",
+      "description": "Counterfactual annual fiscal + forgone-earnings cost of Black-White imprisonment-rate disparity, 2010-2019: excess imprisoned Black adults x per-inmate cost and earnings losses.",
+      "source": {
+        "name": "Derived: BJS imprisonment rates (D1011) x Census demographics (D1002) x BLS-based income assumptions",
+        "url": "https://bjs.ojp.gov/library/publications/prisoners-2020",
+        "retrieved": "2026-07-27",
+        "license": "Public domain (US Government) + documented assumptions"
+      },
+      "construction": {
+        "method": "(Black rate - White rate) x Black adults per year; x BJS-published per-inmate annual cost (~$45k) for fiscal cost; x earnings assumptions for forgone-income bounds. Every assumption labeled in output.",
+        "scripts": [
+          "L08_fetch_bjs_prisoners.py",
+          "P08_construct_imprisonment.py",
+          "P10_construct_demographics.py",
+          "P32_counterfactual_incarceration.py"
+        ],
+        "transformations": [
+          "counterfactual_difference",
+          "cost_assumptions"
+        ]
+      },
+      "units": "2022 USD",
+      "frequency": "annual",
+      "coverage": {
+        "start": "2010",
+        "end": "2019"
+      },
+      "content_type": "derived",
+      "construction_class": "formula",
+      "panel": "P8_CriminalJustice",
+      "publish": true,
+      "output": [
+        "incarceration_opportunity_cost.csv"
+      ],
+      "validation": {
+        "file": "incarceration_opportunity_cost.csv",
+        "year_column": "year",
+        "required_non_null": [
+          "annual_total_cost_mid_usd"
+        ],
+        "positive": [
+          "annual_total_cost_mid_usd"
+        ]
+      }
+    }
+  ]
+}
